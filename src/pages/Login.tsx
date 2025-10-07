@@ -1,7 +1,7 @@
 export default function Login() {
   return (
-    <div className="bg-gray-200 h-screen w-screen flex items-center justify-center text-5xl text-gray-800">
-      <h1>Login</h1>
-    </div>
+    <>
+      <div className="w-auto h-[86px] bg-gradient-to-r from-[#5e5ced] to-[#572486]"/>;
+    </>
   );
 }
