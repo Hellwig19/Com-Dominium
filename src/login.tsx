@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Header from './Components/Header'
 
 const App = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -8,7 +9,7 @@ const App = () => {
   };
   return (
     <>
-      <header className="w-full h-[110px] bg-gradient-to-r from-[#5e5ced] to-[#572486] flex items-center justify-between px-10">
+      {/* <header className="w-full h-[110px] bg-gradient-to-r from-[#5e5ced] to-[#572486] flex items-center justify-between px-10">
         <a href="#" className="flex items-center flex-shrink-0">
           <img src="../Logo.png" alt="Logo" className="" />
         </a>
@@ -26,6 +27,10 @@ const App = () => {
             <span className="text-base font-medium">Suporte</span>
           </a>
         </div>
+      </header> */}
+
+      <header>
+        <Header/>
       </header>
 
       <main className="bg-[#EAEAEA]">
