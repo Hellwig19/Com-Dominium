@@ -1,4 +1,4 @@
-export default function HomePortaria() {
+export default function Footer() {
   return (
     <>
         <div className="bg-[#EAEAEA] w-full h-30 flex items-center text-sm text-gray-700">

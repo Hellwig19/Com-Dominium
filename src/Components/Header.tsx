@@ -17,8 +17,8 @@ export default function Header() {
                 <h1 className="text-[18px]">Ema</h1> {/*Colocar que puxe o nome do perfil da pessoa*/}
                 <h1 className="text-[14px]">Zeladora</h1>{/*Chamar a função em que a pessoa trabalha, adminstradora, zeladora e etc.*/}
               </div>
+            <img className="flex items-end justify-end w-9 h-9 ml-4" src="../Logout.png" alt="" />
           </div>
-            <img className="flex items-end justify-end w-9 h-9" src="../Logout.png" alt="" />
         </header>
       </>
     );
