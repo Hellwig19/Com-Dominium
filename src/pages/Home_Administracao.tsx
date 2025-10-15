@@ -4,7 +4,7 @@ import "react-calendar/dist/Calendar.css";
 import Footer from '../Components/footer';
 import Header from "../Components/Header";
 
-const Zeladoria = () => {
+const Administracao = () => {
   const [value, setValue] = useState(new Date());
 
   const areas = [
@@ -41,6 +41,19 @@ const Zeladoria = () => {
       texto: "text-orange-600",
     },
   ];
+
+  const cadastrosPendentes = [
+    { nome: "Eduardo Santos", casa: "15", data: "15/09/2025" },
+    { nome: "Julia Almeida", casa: "22", data: "15/09/2025" },
+    { nome: "Pedro Lima", casa: "3", data: "16/09/2025" },
+  ];
+
+  const moradores = [
+    { nome: "João Silva", casa: "101", cpf: "123.456.789-00", tel: "(11) 98765-4321" },
+    { nome: "Maria Souza", casa: "202", cpf: "987.654.321-00", tel: "(11) 91234-5678" },
+    { nome: "Pedro Rocha", casa: "303", cpf: "456.789.123-00", tel: "(21) 99887-7665" },
+    { nome: "Ana Lima", casa: "404", cpf: "654.321.987-00", tel: "(21) 97654-3210" },
+  ];
   return (
     <>
       <header>
@@ -48,33 +61,27 @@ const Zeladoria = () => {
       </header>
 
       <main className='bg-[#EAEAEA] min-h-screen'>
-        {/* Card Inicial (Header) - ✅ Ajustado */}
         <div className="bg-white flex flex-col items-center justify-center py-6 md:py-10">
           <div className="flex items-center justify-start w-[96%] max-w-[2300px] h-auto min-h-[150px] bg-gradient-to-r from-[#5e5ced] to-[#572486] rounded-xl p-6 md:p-10 shadow-lg">
             <div className="flex flex-col items-start text-white space-y-1">
-              {/* Tamanho de texto ajustado para ser menor em telas pequenas */}
               <h1 className="text-2xl md:text-[40px] font-semibold leading-tight m-0">Bom dia, Ema</h1> {/* puxar nome do perfil */}
               <h2 className="text-base md:text-[20px] opacity-90 m-0">Seja bem-vindo(a) ao painel da Zeladoria</h2> {/* puxar função aonde a pessoa trabalha*/}
               <div className="flex items-center mt-4 md:mt-8">
                 <img className="h-6 w-6 md:h-[30px] md:w-[30px]" src="../Calendar.png" alt="Calendário" />
-                {/* Tamanho de texto ajustado */}
                 <h1 className="text-base md:text-[20px] ml-2 md:ml-[10px]">Segunda-feira, 18 de Setembro de 2025</h1> {/* puxar o dia da semana, dia do mês e ano*/}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Botões de Troca de Tela - ✅ Ajustado */}
+        {/* Botões de Troca de Tela */}
         <div className="flex flex-col items-center justify-center p-4 md:p-8">
-          {/* Largura ajustada para w-full e max-w-[2300px] */}
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-4 md:p-10 shadow-lg flex flex-col gap-4 md:gap-6">
 
-            {/* Primeira linha de botões: Agora utiliza grid que colapsa para uma coluna em telas pequenas (grid-cols-1) e 3 colunas em telas médias (md:grid-cols-3) */}
+            {/* Primeira linha de botões */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
-              {/* Removidas larguras fixas (w-[400px]) para que o botão preencha o espaço (w-full) */}
               <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                 <img src="../Complaint.png" alt="Cadastro de Morador" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                {/* Tamanho de texto ajustado */}
                 <span className="text-base md:text-[22px]">Cadastro de Morador</span>
               </button>
               <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
@@ -87,32 +94,31 @@ const Zeladoria = () => {
               </button>
             </div>
 
-            {/* Segunda linha de botões: Agora utiliza grid que colapsa para uma coluna em telas pequenas e 2 colunas em telas médias (md:grid-cols-2) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10">
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                <img src="../Plus.png" alt="Novo Comunicado" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                <span className="text-base md:text-[22px]">Novo Comunicado</span>
-              </button>
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                <img src="../Poll.png" alt="Nova Votação" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                <span className="text-base md:text-[22px]">Nova Votação</span>
-              </button>
+            {/* Segunda linha de botões (AJUSTADA) */}
+            <div className="flex flex-col items-center">
+              <div className="w-full md:w-2/3 flex flex-col md:flex-row gap-4 md:gap-10 mx-auto">
+                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../Plus.png" alt="Novo Comunicado" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
+                  <span className="text-base md:text-[22px]">Novo Comunicado</span>
+                </button>
+                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../Poll.png" alt="Nova Votação" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
+                  <span className="text-base md:text-[22px]">Nova Votação</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Div Principal de Votações e Resumo Financeiro - ✅ Ajustado */}
-        {/* Agora utiliza flex-col em telas pequenas e flex-row em telas médias, com espaçamento flexível */}
+        {/* Div Principal de Votações e Resumo Financeiro*/}
         <div className="flex justify-center items-start px-4 md:px-6 mt-6 pb-6">
           <div className="flex flex-col-reverse lg:flex-row gap-6 lg:gap-10 w-full max-w-[1600px]">
 
-            {/* Div Principal de Votações - Agora usa w-full e flex-1 */}
+            {/* Div Principal de Votações */}
             <div className="flex-1 w-full bg-white rounded-2xl p-4 md:p-10 shadow-2xl flex flex-col">
               <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
                 Votações em andamento
               </h1>
-
-              {/* Grid ajustado para colapsar para 1 coluna em telas pequenas e 2 colunas em telas médias (md:grid-cols-2) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {/* Card de Votação */}
                 {[
@@ -149,7 +155,7 @@ const Zeladoria = () => {
               </div>
             </div>
 
-            {/* Div de Resumo Financeiro - Agora usa largura flexível em telas pequenas e largura fixa em telas grandes (lg:w-[400px]) */}
+            {/* Div de Resumo Financeiro */}
             <div className="w-full lg:w-[400px] bg-white rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col">
               <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
                 Resumo Financeiro
@@ -179,22 +185,19 @@ const Zeladoria = () => {
           </div>
         </div>
 
-        {/* Gestão de Áreas Comuns (Calendário e Lista) - ✅ Ajustado */}
+        {/* Gestão de Áreas Comuns (Calendário e Lista) */}
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Gestão de Áreas Comuns</h1>
             <p className="text-gray-500 mb-6 md:mb-8 text-sm">Controle de disponibilidade e reservas</p>
-
-            {/* Flex ajustado: Coluna em telas pequenas, Linha em telas médias (md:flex-row) */}
             <div className="flex flex-col md:flex-row gap-6 md:gap-10">
 
-              {/* Calendário: Largura e altura agora são flexíveis em telas pequenas (w-full, h-auto), mas limitadas em telas médias (md:w-[400px] md:h-[400px]) */}
+              {/* Calendário */}
               <div className="bg-gray-50 rounded-xl shadow-md p-4 md:p-6 w-full h-auto md:w-[400px] md:h-[400px] flex items-center justify-center">
-                {/* O componente Calendar tem classes `scale-110` fixas, o que pode causar overflow. Removi o `scale-110` e adicionei `w-full` e `max-w-full` para garantir que ele se adapte melhor ao container. */}
                 <Calendar onChange={setValue} value={value} className="border-none rounded-xl shadow-sm p-2 md:p-4 bg-white w-full max-w-full" />
               </div>
 
-              {/* Lista de Áreas - Usa flex-1 e w-full */}
+              {/* Lista de Áreas */}
               <div className="flex-1 w-full flex flex-col gap-4">
                 {areas.map((area, i) => (
                   <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-50 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-200">
@@ -207,7 +210,6 @@ const Zeladoria = () => {
                         <p className={`text-sm font-medium ${area.texto}`}>{area.status}</p>
                       </div>
                     </div>
-                    {/* Preço movido para baixo em telas pequenas para não quebrar a linha, usando flex-col e sm:flex-row */}
                     <span className="text-gray-700 font-medium ml-14 sm:ml-0">{area.preco}</span>
                   </div>
                 ))}
@@ -216,19 +218,105 @@ const Zeladoria = () => {
           </div>
         </div>
 
+
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Cadastros Pendentes e Autorizaçãos</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Cadastros Pendentes de Aprovação</h1>
             <p className="text-gray-500 mb-6 md:mb-8 text-sm">Novos moradores aguardando validação</p>
-            <div className='bg-[#FEF9C3] p-2 rounded-lg border'>
-              <h1>Eduardo Santos</h1>
-              <div>
-                <h1>Casa Nº</h1> {/* Puxar o numero da casa que está sendo cadastrado */}
-                <div className='w-16 h-5 bg-amber-300 rounded-[5px] flex text-center'>
-                  <h1 className='w-16 h-3.5 justify-start text-yellow-600 text-xs font-bold'>Pendente</h1>
+
+            {/* Div de Cards */}
+            <div className='space-y-4'>
+              {cadastrosPendentes.map((cadastro, index) => (
+                <div key={index} className='bg-yellow-50 p-4 rounded-xl border flex items-center justify-between shadow-sm'>
+                  <div className='flex items-center gap-4 flex-grow'>
+
+                    {/* Avatar (Ícone de usuário) se for colocar*/}
+                    {/* <div className='w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0'>
+                      <svg className='w-10 h-10 text-gray-400' fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
+                      </svg>
+                    </div> */}
+
+                    <div>
+                      <div className='flex items-center space-x-2'>
+                        <h1 className='text-lg font-semibold text-gray-800'>{cadastro.nome}</h1>
+                        <div className='px-2 h-5 bg-amber-300 rounded-[5px] flex items-center justify-center flex-shrink-0'>
+                          <span className='text-yellow-700 text-xs font-bold'>Pendente</span>
+                        </div>
+                      </div>
+
+                      <h1 className='text-sm font-medium text-gray-700'>Casa Nº **{cadastro.casa}**</h1>
+                      <h1 className='opacity-70 text-black text-xs font-medium mt-0.5'>Solicitado em {cadastro.data}</h1>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-3 flex-shrink-0 ml-4'>
+
+                    {/* Botão Visualizar */}
+                    <button className='flex items-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg font-medium text-sm hover:bg-blue-50 transition'>
+                      <img src="../View.png" alt="Visualizar" className='w-4 h-4 mr-2' />Visualizar</button>
+
+                    {/* Botão Aprovar */}
+                    <button className='flex items-center px-4 py-2 bg-green-500 text-white rounded-lg font-medium text-sm hover:bg-green-600 transition shadow-md'>
+                      <img src="../DoneBranco.png" alt="Aprovar" className='w-4 h-4 mr-2' />Aprovar</button>
+
+                    {/* Botão Rejeitar */}
+                    <button className='flex items-center px-4 py-2 bg-red-500 text-white rounded-lg font-medium text-sm hover:bg-red-600 transition shadow-md'>
+                      <img src="../MultiplyBranco.png" alt="Rejeitar" className='w-4 h-4 mr-2' />Rejeitar</button>
+                  </div>
                 </div>
-              </div>
-              <h1 className='opacity-40 justify-start text-black text-sm font-medium'>Solicitado em 15/09/2025</h1>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-center items-center p-4 md:p-8">
+          <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
+
+            {/* Títulos */}
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Moradores Cadastrados</h1>
+            <p className="text-gray-500 mb-6 md:mb-8 text-sm">Lista de moradores aprovados</p>
+
+            <div className="mb-8">
+              <form className="flex items-center w-full max-w-lg">
+                <label htmlFor="search-input" className="sr-only">Buscar Moradores</label>
+                <div className="relative w-full">
+                  <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                    </svg>
+                  </div>
+                  <input type="text" id="search-input" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5" placeholder="Buscar por nome, CPF ou casa..." required />
+                </div>
+
+                <button type="submit" className="inline-flex items-center py-2.5 px-3 ms-2 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 transition-colors">
+                  <svg className="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                  </svg>
+                  Pesquisar
+                </button>
+              </form>
+            </div>
+
+            {/* Div onde a lista de moradores*/}
+            <div className='grid grid-cols-2 gap-4 pt-4 border-t border-gray-200'>
+              {moradores.map((morador, index) => (
+                <div key={index} className='bg-gray-50 p-4 rounded-lg flex items-center justify-between shadow-sm border border-gray-100'>
+                  <div className='flex items-center gap-4'>
+                    <div className='w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0'>
+                      <svg className='w-8 h-8 text-blue-600' fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className='text-lg font-semibold text-gray-800'>{morador.nome} (Casa Nº {morador.casa})</h1>
+                      <h1 className='text-sm text-gray-500'>CPF: {morador.cpf} | Tel: {morador.tel}</h1>
+                    </div>
+                  </div>
+                  <button className='px-4 py-2 bg-indigo-500 text-white rounded-lg font-medium text-sm hover:bg-indigo-600 transition shadow-md flex-shrink-0'>
+                    Ver Detalhes
+                  </button>
+                </div>
+              ))}-
             </div>
           </div>
         </div>
@@ -241,4 +329,4 @@ const Zeladoria = () => {
   );
 };
 
-export default Zeladoria;
+export default Administracao;

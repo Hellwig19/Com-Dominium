@@ -10,7 +10,6 @@ export default function HomePortaria() {
       </header>
 
       <main>
-
       </main>
 
       <footer>
