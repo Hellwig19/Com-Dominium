@@ -34,7 +34,7 @@ const App = () => {
         
         switch (nivel) {
           case 5:
-            navigate('/zeladoria');
+            navigate('/manutencao');
             break;
           case 3:
             navigate('/portaria');
@@ -134,7 +134,7 @@ const App = () => {
               </div>
 
               <div className="mb-5">
-                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900">Sua Senha</label>
+                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900">Senha</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <img src="../Lock.png" alt="Cadeado" className="w-5 h-5 text-gray-400" />
