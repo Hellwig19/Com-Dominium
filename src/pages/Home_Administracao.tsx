@@ -94,7 +94,7 @@ const Administracao = () => {
               </button>
             </div>
 
-            {/* Segunda linha de botões (AJUSTADA) */}
+            {/* Segunda linha de botões */}
             <div className="flex flex-col items-center">
               <div className="w-full md:w-2/3 flex flex-col md:flex-row gap-4 md:gap-10 mx-auto">
                 <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
