@@ -34,7 +34,7 @@ const App = () => {
         
         switch (nivel) {
           case 5:
-            navigate('/manutencao');
+            navigate('/admin');
             break;
           case 3:
             navigate('/portaria');

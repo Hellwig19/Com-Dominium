@@ -88,10 +88,12 @@ const Administracao = () => {
                 <img src="../Account Male.png" alt="Sistemas de Reserva" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                 <span className="text-base md:text-[22px]">Sistemas de Reserva</span>
               </button>
+              <a href="/manutencao">
               <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                 <img src="../Wrench.png" alt="Manutenção/Sugestão" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                 <span className="text-base md:text-[22px]">Manutenção/Sugestão</span>
               </button>
+              </a>
             </div>
 
             {/* Segunda linha de botões */}
