@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Footer from '../Components/footer';
 import Header from "../Components/Header"
+import DataAtual from '../Components/Data';
 
 export default function Manutencao() {
   return (
@@ -12,10 +13,12 @@ export default function Manutencao() {
       <main className='bg-[#EAEAEA] min-h-screen'>
         {/*Botões de Navegação*/}
         <div className='bg-white flex justify-center items-center py-4 space-x-6 shadow-md'>
+          <a href="/admin">
           <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
             <img className="mr-2 h-5 w-5" src="./Home.png" alt="" />
             Inicio
           </button>
+          </a>
           <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
             <img className="mr-2 h-5 w-5" src="./Megaphone.png" alt="" />
             Comunicação
@@ -34,7 +37,7 @@ export default function Manutencao() {
               <h2 className="text-base md:text-xl opacity-90 m-0">Seja bem-vindo(a) ao painel da Zeladoria</h2> {/* puxar função aonde a pessoa trabalha*/}
               <div className="flex items-center mt-4 md:mt-8">
                 <img className="h-6 w-6 md:h-8 md:w-8" src="../Calendar.png" alt="Calendário" />
-                <h1 className="text-base md:text-xl ml-2 md:ml-3">Segunda-feira, 18 de Setembro de 2025</h1> {/* puxar o dia da semana, mês e ano*/}
+                <h1 className="text-base md:text-xl ml-2 md:ml-3"><DataAtual></DataAtual></h1> 
               </div>
             </div>
           </div>

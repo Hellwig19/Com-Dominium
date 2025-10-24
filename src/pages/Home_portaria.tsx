@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Footer from '../Components/footer';
 import Header from "../Components/Header"
+import DataAtual from '../Components/Data';
 
 export default function HomePortaria() {
   return (
@@ -17,7 +18,7 @@ export default function HomePortaria() {
               <h2 className="text-base md:text-[20px] opacity-90 m-0">Seja bem-vindo(a) ao painel da Portaria</h2> {/* puxar função aonde a pessoa trabalha*/}
               <div className="flex items-center mt-4 md:mt-8">
                 <img className="h-6 w-6 md:h-[30px] md:w-[30px]" src="../Calendar.png" alt="Calendário" />
-                <h1 className="text-base md:text-[20px] ml-2 md:ml-[10px]">Segunda-feira, 18 de Setembro de 2025</h1> {/* puxar o dia da semana, dia do mês e ano*/}
+                <h1 className="text-base md:text-[20px] ml-2 md:ml-[10px]"><DataAtual></DataAtual></h1> {/* puxar o dia da semana, dia do mês e ano*/}
               </div>
             </div>
           </div>
