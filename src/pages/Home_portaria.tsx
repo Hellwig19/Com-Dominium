@@ -1,14 +1,26 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Footer from '../Components/footer';
 import Header from "../Components/Header"
 import DataAtual from '../Components/Data';
+import ModalCad from '../Components/Modal_CadastrarVis';
 
 export default function HomePortaria() {
+
+  const [isVisitanteModalOpen, setIsVisitanteModalOpen] = useState(false);
+
+  const handleOpenVisitanteModal = () => setIsVisitanteModalOpen(true);
+  const handleCloseVisitanteModal = () => setIsVisitanteModalOpen(false);
+
   return (
     <>
       <header>
         <Header />
       </header>
+
+      <ModalCad
+        isOpen={isVisitanteModalOpen}
+        onClose={handleCloseVisitanteModal}
+      />
 
       <main className='bg-[#EAEAEA]'>
         <div className="bg-white flex flex-col items-center justify-center py-6 md:py-10">
@@ -28,14 +40,23 @@ export default function HomePortaria() {
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-4 md:p-10 shadow-lg flex flex-col gap-4 md:gap-6">
             {/* Primeira linha de botões */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
+
+              {/* Botão Encomendas */}
               <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                 <img src="../Plus.png" alt="Encomendas" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                 <span className="text-base md:text-[22px]">Encomendas</span>
               </button>
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+
+              {/* Botão Cadastrar Visitantes*/}
+              <button
+                onClick={handleOpenVisitanteModal}
+                className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
+              >
                 <img src="../Account Male.png" alt="Cadastrar Visitante" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                 <span className="text-base md:text-[22px]">Cadastrar Visitantes</span>
               </button>
+
+              {/* Botão Ultimos Acessos */}
               <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                 <img src="../EyeRoxo.png" alt="Ultimos Acessos" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                 <span className="text-base md:text-[22px]">Ultimos Acessos</span>
@@ -411,11 +432,12 @@ export default function HomePortaria() {
             </div>
           </div>
         </div>
-      </main>
+      </main >
 
       <footer>
         <Footer />
       </footer>
+
     </>
   );
 }

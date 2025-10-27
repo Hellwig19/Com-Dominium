@@ -4,9 +4,25 @@ import "react-calendar/dist/Calendar.css";
 import Footer from '../Components/footer';
 import Header from "../Components/Header";
 import DataAtual from '../Components/Data';
+import ModalVot from '../Components/Modal_Votacao';
+import ModalComu from '../Components/Modal_Comunicacao';
 
 const Administracao = () => {
+
+    {/* Codigo Modal Votação */}
+  const [isVotacaoModalOpen, setIsVotacaoModalOpen] = useState(false);
+
+  const handleOpenVotacaoModal = () => setIsVotacaoModalOpen(true);
+  const handleCloseVotacaoModal = () => setIsVotacaoModalOpen(false);
+
+    {/* Codigo Modal Comunicação */}
+  const [isComunicacaoModalOpen, setIsComunicacaoModalOpen] = useState(false);
+
+  const handleOpenComunicacaoModal = () => setIsComunicacaoModalOpen(true);
+  const handleCloseComunicacaoModal = () => setIsComunicacaoModalOpen(false);
+
   const [value, setValue] = useState(new Date());
+
 
   const areas = [
     {
@@ -61,6 +77,16 @@ const Administracao = () => {
         <Header />
       </header>
 
+      <ModalVot
+        isOpen={isVotacaoModalOpen}
+        onClose={handleCloseVotacaoModal}
+      />
+
+      <ModalComu
+        isOpen={isComunicacaoModalOpen}
+        onClose={handleCloseComunicacaoModal}
+      />
+
       <main className='bg-[#EAEAEA] min-h-screen'>
         <div className="bg-white flex flex-col items-center justify-center py-6 md:py-10">
           <div className="flex items-center justify-start w-[96%] max-w-[2300px] h-auto min-h-[150px] bg-gradient-to-r from-[#5e5ced] to-[#572486] rounded-xl p-6 md:p-10 shadow-lg">
@@ -90,21 +116,21 @@ const Administracao = () => {
                 <span className="text-base md:text-[22px]">Sistemas de Reserva</span>
               </button>
               <a href="/manutencao">
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                <img src="../Wrench.png" alt="Manutenção/Sugestão" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                <span className="text-base md:text-[22px]">Manutenção/Sugestão</span>
-              </button>
+                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../Wrench.png" alt="Manutenção/Sugestão" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
+                  <span className="text-base md:text-[22px]">Manutenção/Sugestão</span>
+                </button>
               </a>
             </div>
 
             {/* Segunda linha de botões */}
             <div className="flex flex-col items-center">
               <div className="w-full md:w-2/3 flex flex-col md:flex-row gap-4 md:gap-10 mx-auto">
-                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                <button onClick={handleOpenComunicacaoModal} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                   <img src="../Plus.png" alt="Novo Comunicado" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                   <span className="text-base md:text-[22px]">Novo Comunicado</span>
                 </button>
-                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                <button onClick={handleOpenVotacaoModal} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                   <img src="../Poll.png" alt="Nova Votação" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                   <span className="text-base md:text-[22px]">Nova Votação</span>
                 </button>

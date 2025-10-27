@@ -6,6 +6,7 @@ import App from './pages/Login.tsx';
 import Administracao from './pages/Home_Administracao.tsx';
 import Manutencao from './pages/Manutencao.tsx'
 import Portaria from './pages/Home_portaria.tsx'
+import Encomendas from './pages/Encomendas.tsx';
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -16,6 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/admin" element={<Administracao />} />
         <Route path='/portaria' element={<Portaria />} />
         <Route path='/manutencao' element={<Manutencao />} />
+        <Route path='/encomendas' element={<Encomendas />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
