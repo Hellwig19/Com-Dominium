@@ -131,7 +131,7 @@ const Administracao = () => {
                   <span className="text-base md:text-[22px]">Novo Comunicado</span>
                 </button>
                 <button onClick={handleOpenVotacaoModal} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                  <img src="../Poll.png" alt="Nova Votação" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
+                  <img src="../PollAzul.png" alt="Nova Votação" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                   <span className="text-base md:text-[22px]">Nova Votação</span>
                 </button>
               </div>
