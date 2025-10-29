@@ -42,10 +42,12 @@ export default function HomePortaria() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
 
               {/* Botão Encomendas */}
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                <img src="../Plus.png" alt="Encomendas" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                <span className="text-base md:text-[22px]">Encomendas</span>
-              </button>
+              <a href="/encomendas">
+                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../Plus.png" alt="Encomendas" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
+                  <span className="text-base md:text-[22px]">Encomendas</span>
+                </button>
+              </a>
 
               {/* Botão Cadastrar Visitantes*/}
               <button

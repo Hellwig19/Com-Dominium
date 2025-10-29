@@ -14,15 +14,17 @@ export default function Manutencao() {
         {/*Botões de Navegação*/}
         <div className='bg-white flex justify-center items-center py-4 space-x-6 shadow-md'>
           <a href="/admin">
-          <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
-            <img className="mr-2 h-5 w-5" src="./Home.png" alt="" />
-            Inicio
-          </button>
+            <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
+              <img className="mr-2 h-5 w-5" src="./Home.png" alt="" />
+              Inicio
+            </button>
           </a>
+          {/*Por a modal de comunicação aqui tambem*/}
           <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
             <img className="mr-2 h-5 w-5" src="./Megaphone.png" alt="" />
             Comunicação
           </button>
+          {/*Por a modal de votação aqui tambem*/}
           <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
             <img className="mr-2 h-5 w-5" src="./PollAzul.png" alt="" />
             Votação
