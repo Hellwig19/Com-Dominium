@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Footer from '../Components/footer';
@@ -6,291 +6,531 @@ import Header from "../Components/Header";
 import DataAtual from '../Components/Data';
 import ModalVot from '../Components/Modal_Votacao';
 import ModalComu from '../Components/Modal_Comunicacao';
+import api from '../services/api';
+import ModalDetalhesCadastro from '../Components/Modal_DetalhesCadastro';
+
+// --- Interfaces ---
+interface Votacao {
+  id: number;
+  titulo: string;
+  descricao: string;
+  _count: { votos: number };
+  opcoes: { 
+    id: number; 
+    texto: string; 
+    _count: { votos: number } 
+  }[];
+}
+
+interface Cliente {
+  id: string;
+  nome: string;
+  cpf: string;
+  email: string;
+  residencias: { numeroCasa: string }[];
+  createdAt: string;
+}
+
+interface AreaComumBackend {
+  id: number;
+  nome: string;
+  capacidade: number;
+  preco: number;
+  statusConfig: 'ATIVO' | 'MANUTENCAO' | 'INATIVO' | 'OCUPADO';
+  statusHoje: string; 
+}
 
 const Administracao = () => {
-
-    {/* Codigo Modal Votação */}
+  // --- Estados de Controle ---
   const [isVotacaoModalOpen, setIsVotacaoModalOpen] = useState(false);
-
-  const handleOpenVotacaoModal = () => setIsVotacaoModalOpen(true);
-  const handleCloseVotacaoModal = () => setIsVotacaoModalOpen(false);
-
-    {/* Codigo Modal Comunicação */}
   const [isComunicacaoModalOpen, setIsComunicacaoModalOpen] = useState(false);
+  const [detalhesClienteId, setDetalhesClienteId] = useState<string | null>(null);
+  
+  const [areaParaEditar, setAreaParaEditar] = useState<AreaComumBackend | null>(null);
+  const [formArea, setFormArea] = useState({ 
+      nome: '', 
+      preco: '', 
+      capacidade: '', 
+      status: 'ATIVO' 
+  });
 
-  const handleOpenComunicacaoModal = () => setIsComunicacaoModalOpen(true);
-  const handleCloseComunicacaoModal = () => setIsComunicacaoModalOpen(false);
+  // --- Dados da Tela ---
+  const [value, setValue] = useState(new Date()); 
+  const [adminName, setAdminName] = useState('Colaborador');
+  
+  const [votacoes, setVotacoes] = useState<Votacao[]>([]);
+  const [moradores, setMoradores] = useState<Cliente[]>([]);
+  const [pendentes, setPendentes] = useState<Cliente[]>([]);
+  const [busca, setBusca] = useState('');
+  const [areas, setAreas] = useState<AreaComumBackend[]>([]);
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAreas, setIsLoadingAreas] = useState(false); 
 
-  const [value, setValue] = useState(new Date());
+  // --- Lógica de Saudação Automática ---
+  const getSaudacao = () => {
+    const hora = new Date().getHours();
+    // Das 06:00 às 11:59 -> Bom dia
+    if (hora >= 6 && hora < 12) return 'Bom dia';
+    // Das 12:00 às 18:59 -> Boa tarde
+    if (hora >= 12 && hora < 19) return 'Boa tarde';
+    // Resto (19:00 às 05:59) -> Boa noite
+    return 'Boa noite';
+  };
 
+  // 1. Carrega dados gerais
+  const fetchInitialData = async () => {
+    try {
+      setIsLoading(true);
+      const [resVotacoes, resMoradores, resPendentes] = await Promise.all([
+        api.get('/votacoes'),
+        api.get('/clientes'),
+        api.get('/clientes?pendentes=true'),
+      ]);
+      setVotacoes(resVotacoes.data);
+      setMoradores(resMoradores.data);
+      setPendentes(resPendentes.data);
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const areas = [
-    {
-      nome: "Salão de Festas",
-      capacidade: "120 pessoas",
-      preco: "R$ 180/dia",
-      status: "Disponível",
-      cor: "bg-purple-500",
-      texto: "text-green-600",
-    },
-    {
-      nome: "Quiosque 1",
-      capacidade: "8 pessoas",
-      preco: "R$ 80/dia",
-      status: "Disponível",
-      cor: "bg-green-500",
-      texto: "text-green-600",
-    },
-    {
-      nome: "Quiosque 2",
-      capacidade: "10 pessoas",
-      preco: "R$ 90/dia",
-      status: "Ocupado",
-      cor: "bg-red-500",
-      texto: "text-red-600",
-    },
-    {
-      nome: "Quiosque 3",
-      capacidade: "12 pessoas",
-      preco: "R$ 100/dia",
-      status: "Manutenção",
-      cor: "bg-orange-500",
-      texto: "text-orange-600",
-    },
-  ];
+  // 2. Função específica para carregar Áreas baseado na data
+  const fetchAreasPorData = async (dataSelecionada: Date) => {
+      try {
+          setIsLoadingAreas(true);
+          const ano = dataSelecionada.getFullYear();
+          const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0');
+          const dia = String(dataSelecionada.getDate()).padStart(2, '0');
+          const dataString = `${ano}-${mes}-${dia}`;
 
-  const cadastrosPendentes = [
-    { nome: "Eduardo Santos", casa: "15", data: "15/09/2025" },
-    { nome: "Julia Almeida", casa: "22", data: "15/09/2025" },
-    { nome: "Pedro Lima", casa: "3", data: "16/09/2025" },
-  ];
+          const response = await api.get(`/areas/status-dia?data=${dataString}`);
+          setAreas(response.data);
+      } catch (error) {
+          console.error("Erro ao buscar status das áreas:", error);
+      } finally {
+          setIsLoadingAreas(false);
+      }
+  };
 
-  const moradores = [
-    { nome: "João Silva", casa: "101", cpf: "123.456.789-00", tel: "(11) 98765-4321" },
-    { nome: "Maria Souza", casa: "202", cpf: "987.654.321-00", tel: "(11) 91234-5678" },
-    { nome: "Pedro Rocha", casa: "303", cpf: "456.789.123-00", tel: "(21) 99887-7665" },
-    { nome: "Ana Lima", casa: "404", cpf: "654.321.987-00", tel: "(21) 97654-3210" },
-  ];
+  useEffect(() => {
+    // Busca do sessionStorage (Segurança)
+    const nomeSalvo = sessionStorage.getItem('admin_nome') || localStorage.getItem('admin_nome');
+    if (nomeSalvo) {
+        setAdminName(nomeSalvo.split(' ')[0]);
+    }
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (value) {
+        fetchAreasPorData(value);
+    }
+  }, [value]); 
+
+  const handleAprovar = async (id: string) => {
+    if(!confirm("Tem certeza que deseja aprovar este cadastro?")) return;
+    try {
+      await api.patch(`/clientes/${id}/aprovar`);
+      alert("Cliente aprovado com sucesso!");
+      fetchInitialData(); 
+    } catch (error) {
+      alert("Erro ao aprovar cliente.");
+    }
+  };
+
+  const handleRejeitar = async (id: string) => {
+    if(!confirm("Tem certeza que deseja REJEITAR e EXCLUIR este cadastro?")) return;
+    try {
+      await api.delete(`/clientes/${id}/rejeitar`);
+      alert("Cliente rejeitado.");
+      fetchInitialData();
+    } catch (error) {
+      alert("Erro ao rejeitar cliente.");
+    }
+  };
+
+  const abrirModalArea = (area: AreaComumBackend) => {
+    setAreaParaEditar(area);
+    setFormArea({
+        nome: area.nome,
+        preco: String(area.preco),
+        capacidade: String(area.capacidade),
+        status: area.statusConfig
+    });
+  };
+
+  const salvarArea = async () => {
+      if (!areaParaEditar) return;
+
+      const precoString = String(formArea.preco).replace(',', '.');
+      const capacidadeString = String(formArea.capacidade).replace(',', '.');
+
+      const precoNumber = parseFloat(precoString);
+      const capacidadeNumber = parseFloat(capacidadeString);
+
+      if (isNaN(precoNumber) || isNaN(capacidadeNumber)) {
+          alert("Erro: O preço e a capacidade devem ser números válidos.");
+          return;
+      }
+
+      try {
+          await api.put(`/areas/${areaParaEditar.id}`, {
+              nome: formArea.nome,
+              preco: precoNumber,
+              capacidade: capacidadeNumber,
+              status: formArea.status
+          });
+          alert("Área atualizada com sucesso!");
+          setAreaParaEditar(null);
+          fetchAreasPorData(value); 
+      } catch (error: any) {
+          console.error(error);
+          const msgErro = error.response?.data?.erro || error.response?.data?.message || "Erro desconhecido ao atualizar.";
+          alert(`Não foi possível atualizar: ${msgErro}`);
+      }
+  };
+
+  const getCasa = (cliente: Cliente) => {
+    if (cliente.residencias && cliente.residencias.length > 0) {
+      return cliente.residencias[0].numeroCasa;
+    }
+    return "S/N";
+  };
+
+  const formatDate = (isoString: string) => {
+    return new Date(isoString).toLocaleDateString('pt-BR');
+  };
+
+  const handleAprovarWrapper = async (id: string) => {
+    await handleAprovar(id);
+    setDetalhesClienteId(null);
+  };
+
+  const handleRejeitarWrapper = async (id: string) => {
+    await handleRejeitar(id);
+    setDetalhesClienteId(null);
+  };
+
+  const moradoresFiltrados = moradores.filter((morador) => {
+    const termo = busca.toLowerCase();
+    const nome = morador.nome.toLowerCase();
+    const casa = getCasa(morador).toLowerCase();
+    
+    return nome.includes(termo) || casa.includes(termo);
+});
+
   return (
     <>
       <header>
         <Header />
       </header>
 
-      <ModalVot
-        isOpen={isVotacaoModalOpen}
-        onClose={handleCloseVotacaoModal}
-      />
+      <ModalDetalhesCadastro 
+         isOpen={!!detalhesClienteId}
+         onClose={() => setDetalhesClienteId(null)}
+         clienteId={detalhesClienteId}
+         onAprovar={handleAprovarWrapper}
+         onRejeitar={handleRejeitarWrapper}
+       />
+      <ModalVot isOpen={isVotacaoModalOpen} onClose={() => setIsVotacaoModalOpen(false)} />
+      <ModalComu isOpen={isComunicacaoModalOpen} onClose={() => setIsComunicacaoModalOpen(false)} />
 
-      <ModalComu
-        isOpen={isComunicacaoModalOpen}
-        onClose={handleCloseComunicacaoModal}
-      />
+      {/* --- MODAL DE EDIÇÃO DE ÁREA --- */}
+      {areaParaEditar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+                <div className="bg-[#5e5ced] p-4 flex justify-between items-center">
+                    <h2 className="text-white font-bold text-lg">Editar Área Comum</h2>
+                    <button onClick={() => setAreaParaEditar(null)} className="text-white hover:bg-white/20 rounded-full p-1">
+                        <span className="text-xl font-bold">✕</span>
+                    </button>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Área</label>
+                        <input 
+                            type="text" 
+                            className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none"
+                            value={formArea.nome}
+                            onChange={e => setFormArea({...formArea, nome: e.target.value})}
+                        />
+                    </div>
+                    <div className="flex gap-4">
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Taxa (R$)</label>
+                            <input 
+                                type="text"
+                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none"
+                                value={formArea.preco}
+                                onChange={e => setFormArea({...formArea, preco: e.target.value})}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Capacidade</label>
+                            <input 
+                                type="number" 
+                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none"
+                                value={formArea.capacidade}
+                                onChange={e => setFormArea({...formArea, capacidade: e.target.value})}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status de Disponibilidade</label>
+                        <select 
+                            className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none"
+                            value={formArea.status}
+                            onChange={e => setFormArea({...formArea, status: e.target.value})}
+                        >
+                            <option value="ATIVO">Ativo (Disponível para Reserva)</option>
+                            <option value="MANUTENCAO">Em Manutenção (Bloqueado)</option>
+                            <option value="OCUPADO">Ocupado / Bloqueado Manualmente</option>
+                            <option value="INATIVO">Inativo (Oculto no app)</option>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                            * "Manutenção" e "Ocupado" impedem novas reservas no App.
+                        </p>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                        <button onClick={() => setAreaParaEditar(null)} className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                        <button onClick={salvarArea} className="flex-1 py-2 bg-[#5e5ced] text-white rounded-lg hover:bg-[#4a48c9] font-medium">Salvar Alterações</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
 
       <main className='bg-[#EAEAEA] min-h-screen'>
+        {/* Header e Saudação */}
         <div className="bg-white flex flex-col items-center justify-center py-6 md:py-10">
           <div className="flex items-center justify-start w-[96%] max-w-[2300px] h-auto min-h-[150px] bg-gradient-to-r from-[#5e5ced] to-[#572486] rounded-xl p-6 md:p-10 shadow-lg">
             <div className="flex flex-col items-start text-white space-y-1">
-              <h1 className="text-2xl md:text-[40px] font-semibold leading-tight m-0">Bom dia, Ema</h1> {/* puxar nome do perfil */}
-              <h2 className="text-base md:text-[20px] opacity-90 m-0">Seja bem-vindo(a) ao painel da Adminstração</h2> {/* puxar função aonde a pessoa trabalha*/}
+              
+              {/* AQUI ESTÁ A MUDANÇA DA SAUDAÇÃO */}
+              <h1 className="text-2xl md:text-[40px] font-semibold leading-tight m-0">
+                 {getSaudacao()}, {adminName}
+              </h1> 
+              
+              <h2 className="text-base md:text-[20px] opacity-90 m-0">Seja bem-vindo(a) ao painel da Administração</h2>
               <div className="flex items-center mt-4 md:mt-8">
                 <img className="h-6 w-6 md:h-[30px] md:w-[30px]" src="../Calendar.png" alt="Calendário" />
-                <h1 className="text-base md:text-[20px] ml-2 md:ml-[10px]"><DataAtual></DataAtual></h1> {/* puxar o dia da semana, dia do mês e ano*/}
+                <h1 className="text-base md:text-[20px] ml-2 md:ml-[10px]"><DataAtual></DataAtual></h1>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Botões de Troca de Tela */}
+        {/* Atalhos */}
         <div className="flex flex-col items-center justify-center p-4 md:p-8">
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-4 md:p-10 shadow-lg flex flex-col gap-4 md:gap-6">
-
-            {/* Primeira linha de botões */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                <img src="../Complaint.png" alt="Cadastro de Morador" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                <span className="text-base md:text-[22px]">Cadastro de Morador</span>
+              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                <img src="../Complaint.png" alt="" className="w-8 h-8" /><span className="text-lg">Cadastro de Morador</span>
               </button>
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                <img src="../Account Male.png" alt="Sistemas de Reserva" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                <span className="text-base md:text-[22px]">Sistemas de Reserva</span>
+              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                <img src="../Account Male.png" alt="" className="w-8 h-8" /><span className="text-lg">Sistemas de Reserva</span>
               </button>
               <a href="/manutencao">
-                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                  <img src="../Wrench.png" alt="Manutenção/Sugestão" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                  <span className="text-base md:text-[22px]">Manutenção/Sugestão</span>
+                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../Wrench.png" alt="" className="w-8 h-8" /><span className="text-lg">Manutenção/Sugestão</span>
                 </button>
               </a>
             </div>
-
-            {/* Segunda linha de botões */}
-            <div className="flex flex-col items-center">
-              <div className="w-full md:w-2/3 flex flex-col md:flex-row gap-4 md:gap-10 mx-auto">
-                <button onClick={handleOpenComunicacaoModal} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                  <img src="../Plus.png" alt="Novo Comunicado" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                  <span className="text-base md:text-[22px]">Novo Comunicado</span>
+            <div className="flex justify-center gap-4 md:gap-10">
+                <button onClick={() => setIsComunicacaoModalOpen(true)} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full md:w-1/3 h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../Plus.png" alt="" className="w-8 h-8" /><span className="text-lg">Novo Comunicado</span>
                 </button>
-                <button onClick={handleOpenVotacaoModal} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                  <img src="../PollAzul.png" alt="Nova Votação" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
-                  <span className="text-base md:text-[22px]">Nova Votação</span>
+                <button onClick={() => setIsVotacaoModalOpen(true)} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full md:w-1/3 h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../PollAzul.png" alt="" className="w-8 h-8" /><span className="text-lg">Nova Votação</span>
                 </button>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Div Principal de Votações e Resumo Financeiro*/}
         <div className="flex justify-center items-start px-4 md:px-6 mt-6 pb-6">
           <div className="flex flex-col-reverse lg:flex-row gap-6 lg:gap-10 w-full max-w-[1600px]">
-
-            {/* Div Principal de Votações */}
+            {/* Votações */}
             <div className="flex-1 w-full bg-white rounded-2xl p-4 md:p-10 shadow-2xl flex flex-col">
-              <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
-                Votações em andamento
-              </h1>
+              <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Votações em andamento</h1>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {/* Card de Votação */}
-                {[
-                  { titulo: "Reforma da Área de Lazer", desc: "Proposta de reforma completa, incluindo pintura, novos equipamentos e paisagismo.", sim: 234, nao: 89 },
-                  { titulo: "Troca do Portão Principal", desc: "Substituição do portão principal por um modelo automatizado e reforçado.", sim: 198, nao: 47 },
-                  { titulo: "Instalação de Câmeras", desc: "Proposta para instalação de câmeras de segurança em todas as entradas e áreas comuns.", sim: 321, nao: 34 },
-                  { titulo: "Nova Academia", desc: "Proposta de construção de uma nova academia moderna para os moradores.", sim: 402, nao: 120 },
-                ].map((votacao, i) => (
-                  <div key={i} className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full">
-                    <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-2">{votacao.titulo}</h2>
-                    <p className="text-xs md:text-sm text-gray-600 mb-4 leading-relaxed flex-grow">
-                      {votacao.desc}
-                    </p>
-
-                    {/* Seção de Votos */}
-                    <div className="flex justify-between mt-4">
-                      {/* Votos positivos */}
-                      <div className="flex items-center gap-2">
-                        <img src="../Done.png" alt="Votos a favor" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
-                        <span className="text-sm text-green-600 font-medium">
-                          {votacao.sim} votos
-                        </span>
+                {votacoes.slice(0, 4).map((votacao) => {
+                   const op1 = votacao.opcoes[0];
+                   const op2 = votacao.opcoes[1];
+                   return (
+                    <div key={votacao.id} className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 rounded-xl shadow-md flex flex-col h-full">
+                      <h2 className="text-lg font-semibold text-gray-800 mb-2">{votacao.titulo}</h2>
+                      <p className="text-sm text-gray-600 mb-4 flex-grow">{votacao.descricao}</p>
+                      <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
+                        {op1 && (
+                          <div className="flex items-center gap-2">
+                            <img src="../Done.png" className="w-5 h-5" />
+                            <span className="text-sm font-bold text-green-700">{op1._count.votos} - {op1.texto}</span>
+                          </div>
+                        )}
+                        {op2 && (
+                          <div className="flex items-center gap-2">
+                            <img src="../Multiply.png" className="w-5 h-5" />
+                            <span className="text-sm font-bold text-red-600">{op2._count.votos} - {op2.texto}</span>
+                          </div>
+                        )}
                       </div>
-
-                      {/* Votos negativos */}
-                      <div className="flex items-center gap-2"> <img src="../Multiply.png" alt="Votos contra" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
-                        <span className="text-sm text-red-500 font-medium">
-                          {votacao.nao} votos
-                        </span>
-                      </div>
+                      <p className="text-xs text-center text-gray-400 mt-2">Total: {votacao._count.votos} votos</p>
                     </div>
-                  </div>
-                ))}
+                   );
+                })}
+                {votacoes.length === 0 && <p className="text-gray-500">Nenhuma votação ativa.</p>}
               </div>
             </div>
 
-            {/* Div de Resumo Financeiro */}
+            {/* Financeiro */}
             <div className="w-full lg:w-[400px] bg-white rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col">
-              <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
-                Resumo Financeiro
-              </h1>
-
-              <div className="flex flex-col gap-4 text-sm md:text-[20px]">
-                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-md shadow-sm hover:scale-[1.02] transition-all">
+              <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Resumo Financeiro</h1>
+              <div className="flex flex-col gap-4">
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-md shadow-sm">
                   <p className="font-semibold text-green-700 text-sm">Receita mensal</p>
-                  <p className="text-green-600 text-lg md:text-xl">
-                    R$ 135.269,00 <span className="text-green-600">↑</span>
-                  </p>
+                  <p className="text-green-600 text-xl">R$ 135.269,00 ↑</p>
                 </div>
-
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm hover:scale-[1.02] transition-all ">
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
                   <p className="font-semibold text-red-700 text-sm">Despesas mensais</p>
-                  <p className="text-red-600 text-lg md:text-xl">
-                    R$ 45.269,00 <span className="text-red-600">↓</span>
-                  </p>
+                  <p className="text-red-600 text-xl">R$ 45.269,00 ↓</p>
                 </div>
-
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md shadow-sm hover:scale-[1.02] transition-all">
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md shadow-sm">
                   <p className="font-semibold text-blue-700 text-sm">Saldo disponível</p>
-                  <p className="text-blue-700 text-lg md:text-xl">R$ 90.000,00</p>
+                  <p className="text-blue-700 text-xl">R$ 90.000,00</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Gestão de Áreas Comuns (Calendário e Lista) */}
+        {/* --- GESTÃO DE ÁREAS COMUNS --- */}
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Gestão de Áreas Comuns</h1>
-            <p className="text-gray-500 mb-6 md:mb-8 text-sm">Controle de disponibilidade e reservas</p>
-            <div className="flex flex-col md:flex-row gap-6 md:gap-10">
-
-              {/* Calendário */}
-              <div className="bg-gray-50 rounded-xl shadow-md p-4 md:p-6 w-full h-auto md:w-[400px] md:h-[400px] flex items-center justify-center">
-                <Calendar onChange={setValue} value={value} className="border-none rounded-xl shadow-sm p-2 md:p-4 bg-white w-full max-w-full" />
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                Gestão de Áreas Comuns 
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                    (Visualizando: {value.toLocaleDateString('pt-BR')})
+                </span>
+            </h1>
+            
+            <div className="flex flex-col md:flex-row gap-6 md:gap-10 mt-6">
+              <div className="bg-gray-50 rounded-xl shadow-md p-4 w-full md:w-[400px] flex justify-center">
+                <Calendar onChange={setValue} value={value} className="border-none rounded-xl shadow-sm w-full" />
               </div>
 
-              {/* Lista de Áreas */}
               <div className="flex-1 w-full flex flex-col gap-4">
-                {areas.map((area, i) => (
-                  <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-50 rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-200">
-                    <div className="flex items-center gap-4 mb-2 sm:mb-0">
-                      <div className={`w-10 h-10 ${area.cor} rounded-lg flex items-center justify-center text-white text-xl`}>🏠
+                {isLoadingAreas && <p className="text-center py-4 text-blue-600">Buscando disponibilidade para esta data...</p>}
+                
+                {!isLoadingAreas && areas.map((area) => {
+                  const isManutencao = area.statusHoje === 'Manutenção';
+                  const isOcupado = area.statusHoje === 'Ocupado (Fixo)' || area.statusHoje === 'Ocupado';
+                  
+                  let borderColor = '#22c55e'; 
+                  let statusColor = 'text-green-600';
+                  let iconBg = 'bg-green-500';
+
+                  if (isManutencao) {
+                      borderColor = '#f97316'; 
+                      statusColor = 'text-orange-600';
+                      iconBg = 'bg-orange-500';
+                  } else if (isOcupado) {
+                      borderColor = '#ef4444'; 
+                      statusColor = 'text-red-600';
+                      iconBg = 'bg-red-500';
+                  } else if (area.statusHoje === 'Inativo') {
+                      borderColor = '#9ca3af';
+                      statusColor = 'text-gray-500';
+                      iconBg = 'bg-gray-400';
+                  }
+
+                  return (
+                    <div key={area.id} className="flex flex-col sm:flex-row items-center justify-between bg-gray-50 rounded-xl p-4 shadow-md border-l-4 transition-all hover:shadow-lg"
+                         style={{ borderLeftColor: borderColor }}>
+                      <div className="flex items-center gap-4 mb-4 sm:mb-0">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-xl ${iconBg}`}>
+                          {isManutencao ? '🛠️' : '🏠'}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-800 text-lg">{area.nome}</h3>
+                          <p className="text-sm text-gray-600">Capacidade: {area.capacidade} pessoas</p>
+                          <p className={`text-sm font-bold ${statusColor}`}>
+                            {area.statusHoje}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-800">{area.nome}</h3>
-                        <p className="text-sm text-gray-600">Capacidade: {area.capacidade}</p>
-                        <p className={`text-sm font-medium ${area.texto}`}>{area.status}</p>
+                      
+                      <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500">Taxa de uso</p>
+                            <span className="text-gray-800 font-bold text-lg">R$ {area.preco}</span>
+                          </div>
+                          
+                          <button 
+                             onClick={() => abrirModalArea(area)}
+                             className="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition text-sm font-medium shadow-sm"
+                          >
+                             Editar / Manutenção
+                          </button>
                       </div>
                     </div>
-                    <span className="text-gray-700 font-medium ml-14 sm:ml-0">{area.preco}</span>
-                  </div>
-                ))}
+                  );
+                })}
+                
+                {areas.length === 0 && !isLoadingAreas && (
+                    <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        Nenhuma área comum cadastrada no sistema.
+                    </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-
+        {/* Pendentes e Moradores */}
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Cadastros Pendentes de Aprovação</h1>
-            <p className="text-gray-500 mb-6 md:mb-8 text-sm">Novos moradores aguardando validação</p>
+            
+            {!isLoading && pendentes.length === 0 && (
+              <div className="p-4 bg-green-50 text-green-800 rounded-lg border border-green-200">
+                Nenhum cadastro pendente no momento.
+              </div>
+            )}
 
-            {/* Div de Cards */}
-            <div className='space-y-4'>
-              {cadastrosPendentes.map((cadastro, index) => (
-                <div key={index} className='bg-yellow-50 p-4 rounded-xl border flex items-center justify-between shadow-sm'>
-                  <div className='flex items-center gap-4 flex-grow'>
-
-                    {/* Avatar (Ícone de usuário) se for colocar*/}
-                    {/* <div className='w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0'>
-                      <svg className='w-10 h-10 text-gray-400' fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
-                      </svg>
-                    </div> */}
-
-                    <div>
-                      <div className='flex items-center space-x-2'>
-                        <h1 className='text-lg font-semibold text-gray-800'>{cadastro.nome}</h1>
-                        <div className='px-2 h-5 bg-amber-300 rounded-[5px] flex items-center justify-center flex-shrink-0'>
-                          <span className='text-yellow-700 text-xs font-bold'>Pendente</span>
-                        </div>
+            <div className='space-y-4 mt-4'>
+              {pendentes.map((cadastro) => (
+                <div key={cadastro.id} className='bg-yellow-50 p-4 rounded-xl border border-yellow-200 flex flex-col md:flex-row md:items-center justify-between shadow-sm gap-4'>
+                  <div>
+                    <div className='flex items-center space-x-2'>
+                      <h1 className='text-lg font-semibold text-gray-800'>{cadastro.nome}</h1>
+                      <div className='px-2 h-5 bg-amber-300 rounded-[5px] flex items-center justify-center'>
+                        <span className='text-yellow-800 text-xs font-bold'>Pendente</span>
                       </div>
-
-                      <h1 className='text-sm font-medium text-gray-700'>Casa Nº **{cadastro.casa}**</h1>
-                      <h1 className='opacity-70 text-black text-xs font-medium mt-0.5'>Solicitado em {cadastro.data}</h1>
                     </div>
+                    <h1 className='text-sm font-medium text-gray-700 mt-1'>
+                      CPF: {cadastro.cpf} • Casa Nº <strong>{getCasa(cadastro)}</strong>
+                    </h1>
+                    <h1 className='opacity-70 text-black text-xs font-medium mt-0.5'>
+                      Solicitado em {formatDate(cadastro.createdAt)}
+                    </h1>
                   </div>
-                  <div className='flex items-center gap-3 flex-shrink-0 ml-4'>
-
-                    {/* Botão Visualizar */}
-                    <button className='flex items-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg font-medium text-sm hover:bg-blue-50 transition'>
-                      <img src="../View.png" alt="Visualizar" className='w-4 h-4 mr-2' />Visualizar</button>
-
-                    {/* Botão Aprovar */}
-                    <button className='flex items-center px-4 py-2 bg-green-500 text-white rounded-lg font-medium text-sm hover:bg-green-600 transition shadow-md'>
-                      <img src="../DoneBranco.png" alt="Aprovar" className='w-4 h-4 mr-2' />Aprovar</button>
-
-                    {/* Botão Rejeitar */}
-                    <button className='flex items-center px-4 py-2 bg-red-500 text-white rounded-lg font-medium text-sm hover:bg-red-600 transition shadow-md'>
-                      <img src="../MultiplyBranco.png" alt="Rejeitar" className='w-4 h-4 mr-2' />Rejeitar</button>
+                  <div className='flex items-center gap-3'>
+                    <button 
+                      onClick={() => setDetalhesClienteId(cadastro.id)}
+                      className='flex items-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg font-medium text-sm hover:bg-blue-50 transition shadow-sm'
+                    >
+                      <img src="../View.png" alt="" className='w-4 h-4 mr-2' />Visualizar
+                    </button>
+                    <button onClick={() => handleAprovar(cadastro.id)} className='flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 transition shadow-md'>
+                      <img src="../DoneBranco.png" alt="" className='w-4 h-4 mr-2' />Aprovar
+                    </button>
+                    <button onClick={() => handleRejeitar(cadastro.id)} className='flex items-center px-4 py-2 bg-red-600 text-white rounded-lg font-medium text-sm hover:bg-red-700 transition shadow-md'>
+                      <img src="../MultiplyBranco.png" alt="" className='w-4 h-4 mr-2' />Rejeitar
+                    </button>
                   </div>
                 </div>
               ))}
@@ -300,57 +540,43 @@ const Administracao = () => {
 
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
-
-            {/* Títulos */}
             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Moradores Cadastrados</h1>
-            <p className="text-gray-500 mb-6 md:mb-8 text-sm">Lista de moradores aprovados</p>
-
-            <div className="mb-8">
-              <form className="flex items-center w-full max-w-lg">
-                <label htmlFor="search-input" className="sr-only">Buscar Moradores</label>
-                <div className="relative w-full">
-                  <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                    </svg>
-                  </div>
-                  <input type="text" id="search-input" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5" placeholder="Buscar por nome, CPF ou casa..." required />
-                </div>
-
-                <button type="submit" className="inline-flex items-center py-2.5 px-3 ms-2 text-sm font-medium text-white bg-purple-800 rounded-lg border border-purple-800 hover:bg-purple-800 focus:ring-4 focus:outline-none focus:ring-blue-300 transition-colors">
-                  <svg className="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                  </svg>
-                  Pesquisar
-                </button>
-              </form>
+            
+            <div className="mb-8 max-w-lg">
+               <input 
+                 type="text" 
+                 className="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 outline-none" 
+                 placeholder="Buscar por nome ou casa..." 
+                 value={busca}
+                 onChange={(e) => setBusca(e.target.value)} // Atualiza o estado
+               />
             </div>
 
-            {/* Div onde a lista de moradores*/}
-            <div className='grid grid-cols-2 gap-4 pt-4 border-t border-gray-200'>
-              {moradores.map((morador, index) => (
-                <div key={index} className='bg-gray-50 p-4 rounded-lg flex items-center justify-between shadow-sm border border-gray-100'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200'>
+              {/* Usa a lista filtrada em vez da original */}
+              {moradoresFiltrados.length === 0 && (
+                  <p className="text-gray-500 col-span-2 text-center py-4">Nenhum morador encontrado.</p>
+              )}
+
+              {moradoresFiltrados.slice(0, 10).map((morador) => (
+                <div key={morador.id} className='bg-gray-50 p-4 rounded-lg flex items-center justify-between shadow-sm border border-gray-100 hover:bg-gray-100 transition'>
                   <div className='flex items-center gap-4'>
-                    <div className='w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0'>
-                      <svg className='w-8 h-8 text-blue-600' fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path>
-                      </svg>
+                    <div className='w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl'>
+                      {morador.nome.charAt(0)}
                     </div>
                     <div>
-                      <h1 className='text-lg font-semibold text-gray-800'>{morador.nome} (Casa Nº {morador.casa})</h1>
-                      <h1 className='text-sm text-gray-500'>CPF: {morador.cpf} | Tel: {morador.tel}</h1>
+                      <h1 className='text-lg font-semibold text-gray-800'>{morador.nome}</h1>
+                      <h1 className='text-sm text-gray-500'>Casa: {getCasa(morador)}</h1>
+                      <h1 className='text-xs text-gray-400'>{morador.email}</h1>
                     </div>
                   </div>
-                  <button className='px-4 py-2 bg-indigo-500 text-white rounded-lg font-medium text-sm hover:bg-indigo-600 transition shadow-md flex-shrink-0'>
-                    Ver Detalhes
-                  </button>
+                  <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Ativo</span>
                 </div>
-              ))}-
+              ))}
             </div>
           </div>
         </div>
       </main>
-
       <footer>
         <Footer />
       </footer>

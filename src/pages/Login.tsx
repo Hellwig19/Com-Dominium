@@ -1,16 +1,14 @@
 import Footer from '../Components/footer';
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
-const App = () => {
+const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
-
-  const [cpfError, setCpfError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -20,24 +18,34 @@ const App = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    setCpfError('');
-    setPasswordError('');
+    setLoginError('');
+    setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3000/admin-login', {
+      const response = await api.post('/admin-login', {
         cpf: cpf,
         senha: password,
       });
 
       if (response.status === 200) {
-        const { token, nivel } = response.data;
+        const { token, nivel, nome } = response.data;
+        
+        // --- MUDANÇA AQUI ---
+        // 1. Limpa qualquer rastro antigo no localStorage (por segurança)
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_nivel');
+        localStorage.removeItem('admin_nome');
 
-        localStorage.setItem('admin_token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        // 2. Salva APENAS na sessão (some ao fechar o navegador)
+        sessionStorage.setItem('admin_token', token);
+        sessionStorage.setItem('admin_nivel', nivel.toString());
+        sessionStorage.setItem('admin_nome', nome || 'Colaborador');
+
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
         switch (nivel) {
           case 5:
+          case 2:
             navigate('/admin');
             break;
           case 3:
@@ -49,11 +57,11 @@ const App = () => {
         }
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.erro || 'Ocorreu um erro. Tente novamente.';
-
-      if (errorMessage) {
-        setCpfError(errorMessage);
-      }
+      console.error("Erro no login:", err);
+      const errorMessage = err.response?.data?.erro || 'Erro ao conectar ao servidor.';
+      setLoginError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,15 +87,13 @@ const App = () => {
       </header>
 
       <main className="bg-[#EAEAEA] flex-grow">
-        {/* Conteúdo Principal (Cards) */}
         <div className="flex items-start justify-center gap-20 py-16">
 
-          {/* Card 1 */}
+          {/* Card 1: Informações */}
           <div className="w-[440px] h-[496px] bg-white rounded-[10px] shadow-xl p-6 flex-shrink-0">
             <h1 className="text-2xl font-medium px-4 py-2 pt-4">Acesso Exclusivo para:</h1>
 
             <div className="flex flex-col items-center justify-center pt-4 space-y-4">
-
               {/* Item: Porteiros */}
               <div className="bg-[#B7FDCC4D] w-[360px] rounded-[10px] flex py-6 px-4 shadow-md">
                 <img src="../Building.png" alt="" className="w-12 h-12 flex-shrink-0" />
@@ -117,10 +123,9 @@ const App = () => {
             </div>
           </div>
 
-          {/* Card 2: Login*/}
+          {/* Card 2: Login */}
           <div className="w-[440px] bg-white rounded-[10px] shadow-xl flex-shrink-0">
 
-            {/* Header de Login */}
             <div className="bg-gradient-to-r from-[#5e5ced] to-[#572486] w-full h-[170px] rounded-t-[10px] flex items-center justify-center flex-col p-4">
               <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-900 rounded-full flex items-center justify-center shadow-md">
                 <img src="../LOGIN.png" alt="" className="w-10 h-10" />
@@ -129,56 +134,63 @@ const App = () => {
               <h1 className="text-white text-base text-center opacity-90">Acesse sua área de trabalho</h1>
             </div>
 
-            {/* Formulário de Login */}
             <form className="max-w-sm mx-auto py-6 px-8" onSubmit={handleLogin}>
 
-              {/* Campo CPF*/}
-              <div className="mb-5 relative">
-                <div className="flex justify-between items-center mb-2">
-                  <label htmlFor="cpf" className="text-sm font-medium text-gray-900">CPF</label>
-                  {cpfError && <span className="text-red-500 text-xs font-medium">{cpfError}</span>}
+              {loginError && (
+                <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 text-sm rounded text-center">
+                  {loginError}
                 </div>
+              )}
 
+              <div className="mb-5 relative">
+                <label htmlFor="cpf" className="text-sm font-medium text-gray-900 block mb-2">CPF</label>
                 <div className="absolute inset-y-12 left-0 flex items-center pl-3 pointer-events-none">
-                  <img src="UserCPF.png" alt="Ícone de CPF" className="w-5 h-5 text-gray-400" />
+                  <img src="../UserCPF.png" alt="Ícone de CPF" className="w-5 h-5 text-gray-400" />
                 </div>
-                <input type="text" id="cpf" value={cpf} onChange={(e) => { setCpf(e.target.value); setCpfError(''); }} className={`bg-gray-50 border ${cpfError ? 'border-red-500' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10 dark:bg-white dark:placeholder-gray-400 dark:text-black dark:focus:ring-blue-500 dark:focus:border-blue-500`} placeholder="000.000.000-00" required/>
+                <input 
+                  type="text" 
+                  id="cpf" 
+                  value={cpf} 
+                  onChange={(e) => setCpf(e.target.value)} 
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10" 
+                  placeholder="000.000.000-00" 
+                  required
+                />
               </div>
 
-              {/* Campo Senha*/}
               <div className="mb-5">
-                <div className="flex justify-between items-center mb-2">
-                  <label htmlFor="password" className="text-sm font-medium text-gray-900">Senha</label>
-                  {passwordError && <span className="text-red-500 text-xs font-medium">{passwordError}</span>}
-                </div>
-
+                <label htmlFor="password" className="text-sm font-medium text-gray-900 block mb-2">Senha</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <img src="../Lock.png" alt="Cadeado" className="w-5 h-5 text-gray-400" />
                   </div>
-
-                  <input type={showPassword ? 'text' : 'password'} id="password" value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }} className={`bg-gray-50 border ${passwordError ? 'border-red-500' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10 pr-10 dark:bg-white dark:placeholder-gray-400 dark:text-black dark:focus:ring-blue-500 dark:focus:border-blue-500`} placeholder="********" required/>
-
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    id="password" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10 pr-10" 
+                    placeholder="********" 
+                    required
+                  />
                   <button type="button" onClick={togglePasswordVisibility} className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                    {showPassword ? (
-                      <img src="../EyeSlash.png" alt="Esconder Senha" className="w-5 h-5 text-gray-400" />
-                    ) : (
-                      <img src="../Eye.png" alt="Mostrar Senha" className="w-5 h-5 text-gray-400" />
-                    )}
+                     <span className="text-xs text-gray-500">{showPassword ? 'Ocultar' : 'Ver'}</span>
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center">
-                  <input id="remember" type="checkbox" value="" className="w-4 h-4 border border-gray-300 rounded-sm bg-gray-50 focus:ring-3 focus:ring-blue-300" />
-                  <label htmlFor="remember" className="ms-2 text-sm font-medium text-gray-900">Lembrar-me</label>
-                </div>
+              {/* Removido Checkbox Lembrar-me */}
+              <div className="flex items-center justify-end mb-6">
                 <a href="#" className='text-sm font-medium text-[#2B67EC] hover:underline'>Esqueci minha senha</a>
               </div>
 
               <div className="flex items-center justify-center">
-                <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-colors">Entrar
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className={`text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full py-2.5 text-center transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isLoading ? 'Entrando...' : 'Entrar'}
                 </button>
               </div>
             </form>
@@ -188,11 +200,9 @@ const App = () => {
         {/* Aviso de Segurança */}
         <div className="bg-white w-full flex items-center justify-center py-12 px-10">
           <div className="w-[1100px] h-auto bg-[#FEF9C3] rounded-[5px] border border-[#B57F44] flex items-center justify-start px-16 py-8 shadow-sm">
-
             <div className="w-18 h-18 bg-[#F1CB51] rounded-[10px] flex items-center justify-center flex-shrink-0 mr-6">
               <img src="../Security.png" alt="" className="w-14 h-14" />
             </div>
-
             <div>
               <h1 className='text-xl font-bold'>Aviso de Segurança</h1>
               <h1 className='text-[#B57F44] text-base font-bold leading-relaxed'>
@@ -210,4 +220,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Login;
