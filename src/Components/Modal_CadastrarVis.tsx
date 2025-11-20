@@ -21,7 +21,6 @@ const ModalCad: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         e.preventDefault();
         setLoading(true);
         try {
-            // CORREÇÃO AQUI: Mudou de '/visitas/entrada' para '/visitantes'
             await api.post('/visitantes', {
                 nome: form.nome,
                 cpf: form.cpf,
@@ -80,7 +79,6 @@ const ModalCad: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* CAMPO NÚMERO DA CASA (TEXTO) */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Número da Casa</label>
                                 <input 

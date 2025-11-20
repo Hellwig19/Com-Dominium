@@ -1,17 +1,109 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Footer from '../Components/footer';
 import Header from "../Components/Header"
+import api from '../services/api';
 
-const mockEncomendas = [
-  { casa: '45', morador: 'Maria Santos', proprietaria: true, transportadora: 'Correios', dataHora: '15/09/2025 14:30', tipo: 'Encomenda', status: 'Aguardando' },
-  { casa: '45', morador: 'Maria Santos', proprietaria: true, transportadora: 'Correios', dataHora: '15/09/2025 14:30', tipo: 'Documento', status: 'Aguardando' },
-  { casa: '45', morador: 'Maria Santos', proprietaria: true, transportadora: 'Shopee', dataHora: '15/09/2025 14:30', tipo: 'Encomenda', status: 'Aguardando' },
-  { casa: '45', morador: 'Maria Santos', proprietaria: true, transportadora: 'Jadlog', dataHora: '15/09/2025 14:30', tipo: 'Encomenda', status: 'Aguardando' },
-  { casa: '45', morador: 'Maria Santos', proprietaria: true, transportadora: 'Mercado Livre', dataHora: '15/09/2025 14:30', tipo: 'Encomenda', status: 'Aguardando' },
-];
+interface Encomenda {
+  id: number;
+  nome: string; 
+  remetente: string; 
+  tamanho: string;
+  codigo: string;
+  status: 'AGUARDANDO_RETIRADA' | 'ENTREGUE';
+  dataChegada: string;
+  dataRetirada?: string;
+  cliente: {
+    nome: string;
+    residencias: { numeroCasa: string }[];
+  };
+}
 
 export default function Encomendas() {
-  const [tamanhoEncomenda, setTamanhoEncomenda] = useState('Médio');
+  const [listaEncomendas, setListaEncomendas] = useState<Encomenda[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [form, setForm] = useState({
+    numeroCasa: '',
+    destinatario: '',
+    transportadora: '',
+    tipo: 'Encomenda',
+    tamanho: 'Médio', 
+    observacoes: ''
+  });
+
+  const [codigoRetirada, setCodigoRetirada] = useState('');
+  const [loadingRetirada, setLoadingRetirada] = useState(false);
+
+  const fetchEncomendas = async () => {
+    try {
+      const response = await api.get('/encomendas');
+      setListaEncomendas(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar encomendas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEncomendas();
+  }, []);
+
+
+  const handleRegistrar = async () => {
+    if (!form.numeroCasa || !form.destinatario || !form.transportadora) {
+        alert("Preencha os campos obrigatórios (*)");
+        return;
+    }
+
+    try {
+        await api.post('/encomendas', {
+            numeroCasa: form.numeroCasa,
+            nome: form.destinatario,
+            remetente: form.transportadora,
+            tamanho: form.tamanho,
+            tipo: form.tipo, 
+            observacoes: form.observacoes
+        });
+        alert("Encomenda registrada com sucesso!");
+        setForm({ ...form, numeroCasa: '', destinatario: '', transportadora: '', observacoes: '' }); 
+        fetchEncomendas(); 
+    } catch (error: any) {
+        console.error(error);
+        const msg = error.response?.data?.erro || "Erro ao registrar encomenda. Verifique o número da casa.";
+        alert(msg);
+    }
+  };
+
+  const handleValidarCodigo = async () => {
+      if (!codigoRetirada) return;
+      setLoadingRetirada(true);
+      try {
+          await api.post('/encomendas/retirar-codigo', { codigo: codigoRetirada });
+          alert("Encomenda retirada com sucesso!");
+          setCodigoRetirada('');
+          fetchEncomendas();
+      } catch (error: any) {
+          alert(error.response?.data?.erro || "Código inválido ou erro no sistema.");
+      } finally {
+          setLoadingRetirada(false);
+      }
+  };
+
+  const handleRetirarManual = async (id: number) => {
+      if(!confirm("Confirmar entrega desta encomenda ao morador?")) return;
+      try {
+          await api.patch(`/encomendas/${id}/retirar`);
+          fetchEncomendas();
+      } catch (error) {
+          alert("Erro ao atualizar status.");
+      }
+  };
+
+  const getCasa = (item: Encomenda) => {
+      if (item.cliente?.residencias?.length > 0) return item.cliente.residencias[0].numeroCasa;
+      return "S/N";
+  };
 
   return (
     <>
@@ -20,37 +112,30 @@ export default function Encomendas() {
       </header>
 
       <main className='bg-[#EAEAEA] min-h-screen'>
-        {/*Botões de Navegação*/}
         <div className='flex justify-center items-center py-4 space-x-6'>
           <a href="/portaria">
-            <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
+            <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
               <img className="mr-2 h-5 w-5" src="./Home.png" alt="" />
               Inicio
             </button>
           </a>
-          <a href="/encomendas">
-            <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
-              <img className="mr-2 h-5 w-5" src="./Megaphone.png" alt="Ícone Encomendas" />
-              Encomendas
+          <button className='px-8 py-3 bg-blue-50 text-blue-700 rounded-xl shadow-md border border-blue-300 font-medium text-sm flex items-center'>
+            <img className="mr-2 h-5 w-5" src="./Megaphone.png" alt="Ícone Encomendas" />
+            Encomendas
+          </button>
+          <a href="/portaria">
+            <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
+                <img className="mr-2 h-5 w-5" src="./PollAzul.png" alt="Ícone Visitantes" />
+                Visitantes
             </button>
           </a>
-          <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'> {/* Aumentei px e py, e arredondamento */}
-            <img className="mr-2 h-5 w-5" src="./PollAzul.png" alt="Ícone Visitantes" />
-            Visitantes
-          </button>
         </div>
 
-        {/* Div Principal de Conteúdo */}
         <div className="flex justify-center items-start px-4 md:px-8 mt-6 pb-8">
           <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[2300px]">
             <div className='flex-1 space-y-8'>
               <div className='bg-white p-6 rounded-lg shadow-md'>
                 <h2 className='text-xl font-semibold text-gray-800 mb-6'>Retirada de encomendas</h2>
-
-                <div className='mb-6'>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>Buscar por Número da casa</label>
-                  <input type="text" placeholder="Digite o número da casa..." className='w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500' />
-                </div>
 
                 <div className='flex items-end space-x-4'>
                   <div className='flex-grow'>
@@ -61,87 +146,100 @@ export default function Encomendas() {
                       </span>
                       <input
                         type="text"
-                        placeholder="Código fornecido pelo morador"
-                        className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                        placeholder="Ex: #1234"
+                        className='w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 uppercase'
+                        value={codigoRetirada}
+                        onChange={e => setCodigoRetirada(e.target.value)}
                       />
                     </div>
                   </div>
-                  <button className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium flex items-center'>
+                  <button 
+                    onClick={handleValidarCodigo}
+                    disabled={loadingRetirada}
+                    className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium flex items-center disabled:opacity-50'
+                  >
                     <img className="h-5 w-5 mr-1" src="./DoneCinza.png" alt="Ícone Validar" />
-                    Validar
+                    {loadingRetirada ? 'Validando...' : 'Validar'}
                   </button>
                 </div>
                 <p className='text-xs text-gray-500 mt-2 flex items-center'>
-                  <img className="h-4 w-4 mr-1" src="./Info.png" alt="Ícone Informação" />
-                  Um código permite retirar todas encomendas do morador
+                  <img className="h-4 w-4 mr-1" src="./Info.png" alt="Info" />
+                  O código de retirada é enviado para o app do morador.
                 </p>
               </div>
 
-              {/* Encomendas na Portaria*/}
               <div className='bg-white p-6 rounded-lg shadow-md'>
                 <div className='flex justify-between items-center mb-4'>
                   <h2 className='text-xl font-semibold text-gray-800 flex items-center'>
-                    <img className="h-6 w-6 mr-2 text-blue-600" src="./Trolley.png" alt="Ícone Carrinho" />
+                    <img className="h-6 w-6 mr-2 text-blue-600" src="./Trolley.png" alt="Carrinho" />
                     Encomendas na Portaria
                   </h2>
                   <div className='flex space-x-3'>
-                    <button className='px-3 py-1 text-sm bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 flex items-center'>
-                      Todas as casas
-                      <img className="h-4 w-4 ml-1" src="./Expand Arrow.png" alt="Ícone Seta" />
-                    </button>
-                    <button className='px-3 py-1 text-sm bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 flex items-center'>
-                      Ordenar por data
-                      <img className="h-4 w-4 ml-1" src="./Expand Arrow.png" alt="Ícone Seta" />
-                    </button>
+                    <span className="text-sm text-gray-500 self-center">
+                        {listaEncomendas.filter(e => e.status === 'AGUARDANDO_RETIRADA').length} pendentes
+                    </span>
                   </div>
                 </div>
 
-                {/* Tabela */}
-                <div className='overflow-x-auto'>
+                <div className='overflow-x-auto max-h-[600px] overflow-y-auto'>
                   <table className='min-w-full divide-y divide-gray-200'>
-                    <thead>
+                    <thead className='bg-gray-50 sticky top-0'>
                       <tr>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Casa</th>
-                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Morador</th>
-                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Transportadora</th>
-                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Data/Hora</th>
-                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Tipo</th>
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Destinatário</th>
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Remetente</th>
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Chegada</th>
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Cód.</th>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Status</th>
-                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Ações</th>
+                        <th className='px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>Ações</th>
                       </tr>
                     </thead>
                     <tbody className='bg-white divide-y divide-gray-200'>
-                      {mockEncomendas.map((encomenda, index) => (
-                        <tr key={index}>
+                      {loading && <tr><td colSpan={7} className="p-4 text-center">Carregando...</td></tr>}
+                      
+                      {!loading && listaEncomendas.map((encomenda) => (
+                        <tr key={encomenda.id} className="hover:bg-gray-50">
                           <td className='px-4 py-4 whitespace-nowrap'>
-                            <span className='bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded'>{encomenda.casa}</span>
+                            <span className='bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded'>
+                                {getCasa(encomenda)}
+                            </span>
                           </td>
-                          <td className='px-4 py-4 whitespace-nowrap text-sm text-gray-900'>
-                            {encomenda.morador}
-                            {encomenda.proprietaria && <span className='text-xs text-blue-600 block'>Proprietária</span>}
+                          <td className='px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium'>
+                            {encomenda.nome}
                           </td>
-                          <td className='px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
-                            <div className='flex items-center space-x-1'>
-                              <span className='text-sm font-semibold text-blue-800'>{encomenda.transportadora}</span>
-                            </div>
+                          <td className='px-4 py-4 whitespace-nowrap text-sm text-gray-600'>
+                            {encomenda.remetente} <span className="text-xs text-gray-400">({encomenda.tamanho})</span>
                           </td>
                           <td className='px-4 py-4 whitespace-nowrap text-sm text-gray-500'>
-                            {encomenda.dataHora}
+                            {new Date(encomenda.dataChegada).toLocaleDateString()} <br/>
+                            <span className="text-xs">{new Date(encomenda.dataChegada).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                          </td>
+                          <td className='px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-600'>
+                            {encomenda.codigo}
                           </td>
                           <td className='px-4 py-4 whitespace-nowrap'>
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${encomenda.tipo === 'Encomenda' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                              {encomenda.tipo}
-                            </span>
-                          </td>
-                          <td className='px-4 py-4 whitespace-nowrap'>
-                            <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-orange-600'>
-                              {encomenda.status}
-                            </span>
+                            {encomenda.status === 'AGUARDANDO_RETIRADA' ? (
+                                <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-orange-600'>
+                                    Aguardando
+                                </span>
+                            ) : (
+                                <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800'>
+                                    Entregue
+                                </span>
+                            )}
                           </td>
                           <td className='px-4 py-4 whitespace-nowrap text-right text-sm font-medium'>
-                            <button className='text-gray-500 hover:text-gray-700'>
-                              <img className="h-5 w-5" src="./Menu Vertical.png" alt="Ícone Ações" />
-                            </button>
+                            {encomenda.status === 'AGUARDANDO_RETIRADA' && (
+                                <button 
+                                    onClick={() => handleRetirarManual(encomenda.id)}
+                                    className='text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1 rounded border border-blue-200 text-xs'
+                                >
+                                  Entregar
+                                </button>
+                            )}
+                            {encomenda.status === 'ENTREGUE' && (
+                                <span className="text-gray-400 text-xs">Concluído</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -151,81 +249,101 @@ export default function Encomendas() {
               </div>
             </div>
 
-            {/*Adicionar Encomenda*/}
-            <div className='w-full lg:w-96 bg-white p-6 rounded-lg shadow-xl h-fit flex-shrink-0'>
+            <div className='w-full lg:w-96 bg-white p-6 rounded-lg shadow-xl h-fit flex-shrink-0 sticky top-6'>
               <h2 className='text-xl font-semibold text-gray-800 mb-6 flex items-center'>
-                <img className="h-6 w-6 mr-2 text-blue-600" src="./Add.png" alt="Ícone Adicionar" />
+                <img className="h-6 w-6 mr-2 text-blue-600" src="./Add.png" alt="Adicionar" />
                 Adicionar Encomenda
               </h2>
 
               <div className='space-y-6'>
                 <div>
                   <label htmlFor="numCasa" className='block text-sm font-medium text-gray-700'>Número da Casa <span className='text-red-500'>*</span></label>
-                  <input type="text" id="numCasa" placeholder="Ex: 45" className='w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                  <input 
+                    type="text" 
+                    id="numCasa" 
+                    placeholder="Ex: 45" 
+                    className='w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                    value={form.numeroCasa}
+                    onChange={e => setForm({...form, numeroCasa: e.target.value})}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="morador" className='block text-sm font-medium text-gray-700'>Nome do Morador <span className='text-red-500'>*</span></label>
-                  <input type="text" id="morador" placeholder="Nome completo do morador" className='w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                  <label htmlFor="morador" className='block text-sm font-medium text-gray-700'>Destinatário (Nome) <span className='text-red-500'>*</span></label>
+                  <input 
+                    type="text" 
+                    id="morador" 
+                    placeholder="Nome na etiqueta" 
+                    className='w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                    value={form.destinatario}
+                    onChange={e => setForm({...form, destinatario: e.target.value})}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="transportadora" className='block text-sm font-medium text-gray-700'>Transportadora</label>
-                  <select id="transportadora" className='w-full p-2 border border-gray-300 bg-white rounded-lg focus:ring-blue-500 focus:border-blue-500'>
-                    <option value="">Selecione a transportadora</option>
-                    <option value="correios">Correios</option>
-                    <option value="shopee">Shopee</option>
-                    <option value="jadlog">Jadlog</option>
-                    <option value="mercadolivre">Mercado Livre</option>
+                  <label htmlFor="transportadora" className='block text-sm font-medium text-gray-700'>Transportadora / Remetente <span className='text-red-500'>*</span></label>
+                  <input 
+                    type="text"
+                    id="transportadora"
+                    placeholder="Ex: Correios, Amazon, Mercado Livre"
+                    className='w-full p-2 border border-gray-300 bg-white rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                    value={form.transportadora}
+                    onChange={e => setForm({...form, transportadora: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="tipoEncomenda" className='block text-sm font-medium text-gray-700'>Tipo</label>
+                  <select 
+                    id="tipoEncomenda" 
+                    className='w-full p-2 border border-gray-300 bg-white rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                    value={form.tipo}
+                    onChange={e => setForm({...form, tipo: e.target.value})}
+                  >
+                    <option value="Encomenda">Encomenda</option>
+                    <option value="Documento">Documento</option>
+                    <option value="Delivery">Delivery / Comida</option>
+                    <option value="Outros">Outros</option>
                   </select>
                 </div>
 
                 <div>
-                  <label htmlFor="tipoEncomenda" className='block text-sm font-medium text-gray-700'>Tipo de encomenda</label>
-                  <select id="tipoEncomenda" className='w-full p-2 border border-gray-300 bg-white rounded-lg focus:ring-blue-500 focus:border-blue-500'>
-                    <option value="">Selecione o tipo</option>
-                    <option value="encomenda">Encomenda</option>
-                    <option value="documento">Documento</option>
-                    <option value="chave">Chave/Objeto Pessoal</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-2'>Tamanho da encomenda</label>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>Tamanho</label>
                   <div className="flex space-x-4">
-                    <div className="flex items-center">
-                      <input id="tamanho-pequeno" name="tamanhoEncomenda" type="radio" checked={tamanhoEncomenda === 'Pequeno'} onChange={() => setTamanhoEncomenda('Pequeno')} className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"/>
-                      <label htmlFor="tamanho-pequeno" className="ml-2 block text-sm font-medium text-gray-700">
-                        Pequeno
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input id="tamanho-medio" name="tamanhoEncomenda" type="radio" checked={tamanhoEncomenda === 'Médio'} onChange={() => setTamanhoEncomenda('Médio')} className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"/>
-                      <label htmlFor="tamanho-medio" className="ml-2 block text-sm font-medium text-gray-700">
-                        Médio
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input id="tamanho-grande" name="tamanhoEncomenda" type="radio" checked={tamanhoEncomenda === 'Grande'} onChange={() => setTamanhoEncomenda('Grande')} className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"/>
-                      <label htmlFor="tamanho-grande" className="ml-2 block text-sm font-medium text-gray-700">
-                        Grande
-                      </label>
-                    </div>
+                    {['Pequeno', 'Médio', 'Grande'].map((tam) => (
+                        <div key={tam} className="flex items-center">
+                        <input 
+                            id={`tamanho-${tam}`} 
+                            name="tamanhoEncomenda" 
+                            type="radio" 
+                            checked={form.tamanho === tam} 
+                            onChange={() => setForm({...form, tamanho: tam})} 
+                            className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                        />
+                        <label htmlFor={`tamanho-${tam}`} className="ml-2 block text-sm font-medium text-gray-700">
+                            {tam}
+                        </label>
+                        </div>
+                    ))}
                   </div>
                 </div>
 
                 <div>
                   <label htmlFor="observacoes" className='block text-sm font-medium text-gray-700'>Observações</label>
-                  <textarea id="observacoes" placeholder="Observações adicionais (opcional)" className='w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none'
+                  <textarea 
+                    id="observacoes" 
+                    placeholder="Cód Rastreio, estado da caixa..." 
+                    className='w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none'
+                    value={form.observacoes}
+                    onChange={e => setForm({...form, observacoes: e.target.value})}
                   ></textarea>
                 </div>
 
                 <button
+                  onClick={handleRegistrar}
                   className='w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold text-lg flex items-center justify-center shadow-lg'
                 >
-                  <img className="h-6 w-6 mr-2" src="./Secure.png" alt="Ícone Registrar" />
+                  <img className="h-6 w-6 mr-2" src="./Secure.png" alt="Registrar" />
                   Registrar Encomenda
                 </button>
               </div>

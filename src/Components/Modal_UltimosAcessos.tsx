@@ -25,7 +25,6 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
 
   if (!isOpen) return null;
 
-  // Lógica de Filtro
   const listaFiltrada = visitantes.filter((v) => {
     const bateFiltro = filtro === 'TODOS' ? true : v.status === filtro;
     const bateBusca = v.nome.toLowerCase().includes(termo.toLowerCase()) || 
@@ -37,8 +36,6 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-fade-in">
-        
-        {/* Header */}
         <div className="bg-gradient-to-r from-[#5e5ced] to-[#572486] p-6 rounded-t-xl flex justify-between items-center text-white">
             <div>
                 <h2 className="text-2xl font-bold">Últimos Acessos</h2>
@@ -49,9 +46,7 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
             </button>
         </div>
 
-        {/* Barra de Ferramentas */}
         <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row gap-4 justify-between items-center">
-            {/* Abas de Filtro */}
             <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
                 <button 
                     onClick={() => setFiltro('TODOS')}
@@ -73,7 +68,6 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
                 </button>
             </div>
 
-            {/* Busca */}
             <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input 
@@ -86,7 +80,6 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
             </div>
         </div>
 
-        {/* Lista */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-100/50">
             {listaFiltrada.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -99,8 +92,6 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
                 const isDentro = visita.status === 'DENTRO';
                 return (
                     <div key={visita.id} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between hover:shadow-md transition gap-4">
-                        
-                        {/* Infos Principais */}
                         <div className="flex items-center gap-4">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg shrink-0 ${isDentro ? 'bg-green-500' : 'bg-gray-400'}`}>
                                 {visita.nome.charAt(0)}
@@ -122,8 +113,6 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
                                 </div>
                             </div>
                         </div>
-
-                        {/* Horários e Ações */}
                         <div className="flex flex-col md:flex-row items-end md:items-center gap-4 w-full md:w-auto">
                             <div className="text-right md:text-right text-sm">
                                 <div className="flex items-center justify-end gap-1 text-green-700 font-medium">
@@ -153,8 +142,6 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
                 );
             })}
         </div>
-
-        {/* Footer do Modal */}
         <div className="p-4 border-t border-gray-100 bg-white rounded-b-xl text-center text-xs text-gray-400">
             Mostrando {listaFiltrada.length} registro(s)
         </div>

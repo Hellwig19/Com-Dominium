@@ -3,17 +3,16 @@ import Footer from '../Components/footer';
 import Header from "../Components/Header"
 import DataAtual from '../Components/Data';
 import ModalCad from '../Components/Modal_CadastrarVis';
-import ModalUltimosAcessos from '../Components/Modal_UltimosAcessos'; // <--- IMPORT NOVO
+import ModalUltimosAcessos from '../Components/Modal_UltimosAcessos';
 import api from '../services/api';
 
-// --- Interfaces ---
 interface Visitante {
   id: number;
   nome: string;
   cpf: string;
   numeroCasa: string; 
   placa?: string | null;
-  status: 'DENTRO' | 'SAIU'; // Tipagem precisa bater com o modal
+  status: 'DENTRO' | 'SAIU'; 
   dataEntrada: string;
   dataSaida?: string | null;
 }
@@ -36,21 +35,15 @@ interface MoradorBusca {
 }
 
 export default function HomePortaria() {
-  // --- Estados ---
   const [isVisitanteModalOpen, setIsVisitanteModalOpen] = useState(false);
-  const [isUltimosAcessosOpen, setIsUltimosAcessosOpen] = useState(false); // <--- NOVO ESTADO
+  const [isUltimosAcessosOpen, setIsUltimosAcessosOpen] = useState(false); 
   const [porteiroNome, setPorteiroNome] = useState('Colaborador');
-  
-  // Dados da API
   const [listaVisitantes, setListaVisitantes] = useState<Visitante[]>([]);
   const [logs, setLogs] = useState<FeedItem[]>([]);
-  
-  // Busca de Morador
   const [termoBusca, setTermoBusca] = useState('');
   const [moradorEncontrado, setMoradorEncontrado] = useState<MoradorBusca | null>(null);
   const [isLoadingBusca, setIsLoadingBusca] = useState(false);
 
-  // --- Efeitos ---
   useEffect(() => {
     const nomeSalvo = sessionStorage.getItem('admin_nome') || localStorage.getItem('admin_nome');
     if (nomeSalvo) setPorteiroNome(nomeSalvo.split(' ')[0]);
@@ -70,14 +63,12 @@ export default function HomePortaria() {
     }
   };
 
-  // --- Funções ---
   const handleOpenVisitanteModal = () => setIsVisitanteModalOpen(true);
   const handleCloseVisitanteModal = () => {
     setIsVisitanteModalOpen(false);
     carregarDadosIniciais();
   };
 
-  // Handlers do Modal Últimos Acessos
   const handleOpenUltimosAcessos = () => setIsUltimosAcessosOpen(true);
   const handleCloseUltimosAcessos = () => setIsUltimosAcessosOpen(false);
 
@@ -85,7 +76,7 @@ export default function HomePortaria() {
       if (!confirm("Confirmar saída do visitante?")) return;
       try {
           await api.patch(`/visitantes/${id}/saida`);
-          carregarDadosIniciais(); // Atualiza todas as listas (Card e Modal)
+          carregarDadosIniciais(); 
       } catch (error) {
           alert("Erro ao registrar saída.");
       }
@@ -135,7 +126,6 @@ export default function HomePortaria() {
         <Header />
       </header>
 
-      {/* Modais */}
       <ModalCad
         isOpen={isVisitanteModalOpen}
         onClose={handleCloseVisitanteModal}
@@ -149,7 +139,6 @@ export default function HomePortaria() {
       />
 
       <main className='bg-[#EAEAEA] min-h-screen pb-10'>
-        {/* Saudação */}
         <div className="bg-white flex flex-col items-center justify-center py-6 md:py-10">
           <div className="flex items-center justify-start w-[96%] max-w-[2300px] h-auto min-h-[150px] bg-gradient-to-r from-[#5e5ced] to-[#572486] rounded-xl p-6 md:p-10 shadow-lg">
             <div className="flex flex-col items-start text-white space-y-1">
@@ -165,7 +154,6 @@ export default function HomePortaria() {
           </div>
         </div>
 
-        {/* Botões de Ação */}
         <div className="flex flex-col items-center justify-center p-4 md:p-8 mb-8">
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-4 md:p-10 shadow-lg flex flex-col gap-4 md:gap-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
@@ -183,8 +171,6 @@ export default function HomePortaria() {
                 <img src="../Account Male.png" alt="Cadastrar Visitante" className="h-[30px] w-[30px] md:h-[35px] md:w-[35px]" />
                 <span className="text-base md:text-[22px]">Cadastrar Visitantes</span>
               </button>
-
-              {/* BOTÃO ATUALIZADO PARA ABRIR O NOVO MODAL */}
               <button 
                 onClick={handleOpenUltimosAcessos}
                 className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
@@ -196,7 +182,6 @@ export default function HomePortaria() {
           </div>
         </div>
 
-        {/* Seção de Busca de Morador */}
         <div className="flex flex-col items-center justify-center p-4 md:p-8 mb-8">
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-0 shadow-lg flex flex-col gap-4 md:gap-6 overflow-hidden">
 
@@ -241,7 +226,6 @@ export default function HomePortaria() {
 
                         <div className="bg-white rounded-b-xl shadow-xl p-6 md:p-8 relative z-10 mt-[-20px] mx-4 border border-gray-100">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            {/* CPF */}
                             <div className="flex flex-col gap-2">
                             <div className="flex items-center text-gray-700 font-bold text-base">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-2 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
@@ -254,7 +238,6 @@ export default function HomePortaria() {
                             </div>
                             </div>
 
-                            {/* Veículos */}
                             <div className="flex flex-col gap-2">
                             <div className="flex items-center text-gray-700 font-bold text-base">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-2 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.6-.4-1-1-1h-1.4C18.6 11.2 17.4 10 16 10H8c-1.4 0-2.6 1.2-3.6 2h-1.4c-.6 0-1 .4-1 1v3c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" /></svg>
@@ -276,7 +259,6 @@ export default function HomePortaria() {
                             </div>
                         </div>
                         
-                        {/* Outros Moradores */}
                         <div className="border-t border-gray-200 mt-4 pt-4">
                             <h3 className="font-bold text-gray-700 mb-2">Outros moradores:</h3>
                             <ul className="text-gray-600 text-sm flex flex-wrap gap-x-4 gap-y-1 list-none p-0">
@@ -300,10 +282,8 @@ export default function HomePortaria() {
           </div>
         </div>
 
-        {/* Painéis: Controle de Acesso e Log */}
         <div className="flex flex-col md:flex-row items-start justify-center gap-6 md:gap-20 py-8 px-4">
           
-          {/* Card 1: Controle de Acesso (Hoje) */}
           <div className="w-full md:w-[490px] h-auto bg-white rounded-[10px] shadow-xl flex-shrink-0 p-6">
             <div className="flex justify-between flex-row items-center border-b border-gray-200 pb-4 mb-4">
               <h1 className="text-2xl font-medium px-4 pt-4">Controle de Acesso (Hoje)</h1>
@@ -366,7 +346,6 @@ export default function HomePortaria() {
             </div>
           </div>
 
-          {/* Card 2: Log de Atividades Geral */}
           <div className="w-full md:w-[490px] h-auto bg-white rounded-[10px] shadow-xl flex-shrink-0 p-6">
              <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200 mb-2">
                 <h1 className="text-2xl font-medium text-gray-900">Log de Atividades</h1>
@@ -391,7 +370,6 @@ export default function HomePortaria() {
           </div>
         </div>
 
-        {/* Contatos de Emergência */}
         <div className="flex flex-col items-center justify-center p-4 md:p-8">
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-0 shadow-lg flex flex-col gap-4 md:gap-6 overflow-hidden">
             <div className="px-4 py-4 md:px-6 md:py-4 border-b border-gray-200">

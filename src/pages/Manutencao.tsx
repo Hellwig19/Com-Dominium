@@ -3,6 +3,8 @@ import Footer from '../Components/footer';
 import Header from "../Components/Header"
 import DataAtual from '../Components/Data';
 import api from '../services/api';
+import ModalVot from '../Components/Modal_Votacao';
+import ModalComu from '../Components/Modal_Comunicacao';
 
 interface Sugestao {
   id: number;
@@ -27,7 +29,8 @@ export default function Manutencao() {
   const [sugestoes, setSugestoes] = useState<Sugestao[]>([]);
   const [avisosUrgentes, setAvisosUrgentes] = useState<Aviso[]>([]);
   const [totalMoradores, setTotalMoradores] = useState(0);
-  
+  const [isComunicacaoModalOpen, setIsComunicacaoModalOpen] = useState(false);
+  const [isVotacaoModalOpen, setIsVotacaoModalOpen] = useState(false);
   const [adminName, setAdminName] = useState('Colaborador');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,13 +38,10 @@ export default function Manutencao() {
     const fetchData = async () => {
       setIsLoading(true);
       
-      // 1. Identificação do Usuário
       const nomeSalvo = sessionStorage.getItem('admin_nome') || localStorage.getItem('admin_nome');
       if (nomeSalvo) setAdminName(nomeSalvo.split(' ')[0]);
 
-      // 2. Buscar Dados (Separado para não quebrar tudo se um falhar)
       try {
-        // -- Sugestões --
         try {
             const resSug = await api.get('/sugestoes');
             console.log("Sugestões recebidas:", resSug.data);
@@ -50,7 +50,6 @@ export default function Manutencao() {
             console.error("Erro ao buscar sugestões (verifique permissão):", e);
         }
 
-        // -- Avisos --
         try {
             const resAvisos = await api.get('/avisos');
             console.log("Avisos recebidos:", resAvisos.data);
@@ -60,7 +59,6 @@ export default function Manutencao() {
             console.error("Erro ao buscar avisos:", e);
         }
 
-        // -- Clientes --
         try {
             const resClientes = await api.get('/clientes');
             console.log("Clientes recebidos:", resClientes.data);
@@ -79,7 +77,6 @@ export default function Manutencao() {
     fetchData();
   }, []);
 
-  // --- Helpers ---
   const formatDate = (isoString: string) => {
     if (!isoString) return '';
     return new Date(isoString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -87,11 +84,8 @@ export default function Manutencao() {
 
   const getSaudacao = () => {
     const hora = new Date().getHours();
-    // Das 06:00 às 11:59 -> Bom dia
     if (hora >= 6 && hora < 12) return 'Bom dia';
-    // Das 12:00 às 18:59 -> Boa tarde
     if (hora >= 12 && hora < 19) return 'Boa tarde';
-    // Resto (19:00 às 05:59) -> Boa noite
     return 'Boa noite';
   };
 
@@ -119,7 +113,8 @@ export default function Manutencao() {
       <header>
         <Header />
       </header>
-
+      <ModalVot isOpen={isVotacaoModalOpen} onClose={() => setIsVotacaoModalOpen(false)} />
+      <ModalComu isOpen={isComunicacaoModalOpen} onClose={() => setIsComunicacaoModalOpen(false)} />
       <main className='bg-[#EAEAEA] min-h-screen'>
         <div className='bg-white flex justify-center items-center py-4 space-x-6 shadow-md'>
           <a href="/admin">
@@ -128,11 +123,11 @@ export default function Manutencao() {
               Inicio
             </button>
           </a>
-          <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
+          <button onClick={() => setIsComunicacaoModalOpen(true)} className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
             <img className="mr-2 h-5 w-5" src="./Megaphone.png" alt="" />
             Comunicação
           </button>
-          <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
+          <button onClick={() => setIsVotacaoModalOpen(true)} className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
             <img className="mr-2 h-5 w-5" src="./PollAzul.png" alt="" />
             Votação
           </button>

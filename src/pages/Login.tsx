@@ -29,14 +29,9 @@ const Login = () => {
 
       if (response.status === 200) {
         const { token, nivel, nome } = response.data;
-        
-        // --- MUDANÇA AQUI ---
-        // 1. Limpa qualquer rastro antigo no localStorage (por segurança)
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_nivel');
         localStorage.removeItem('admin_nome');
-
-        // 2. Salva APENAS na sessão (some ao fechar o navegador)
         sessionStorage.setItem('admin_token', token);
         sessionStorage.setItem('admin_nivel', nivel.toString());
         sessionStorage.setItem('admin_nome', nome || 'Colaborador');
@@ -67,7 +62,6 @@ const Login = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header */}
       <header className="w-full h-[110px] bg-gradient-to-r from-[#5e5ced] to-[#572486] flex items-center justify-between px-10">
         <a href="#" className="flex items-center flex-shrink-0">
           <img src="../Logo.png" alt="Logo" className="h-[70px]" />
@@ -88,13 +82,9 @@ const Login = () => {
 
       <main className="bg-[#EAEAEA] flex-grow">
         <div className="flex items-start justify-center gap-20 py-16">
-
-          {/* Card 1: Informações */}
           <div className="w-[440px] h-[496px] bg-white rounded-[10px] shadow-xl p-6 flex-shrink-0">
             <h1 className="text-2xl font-medium px-4 py-2 pt-4">Acesso Exclusivo para:</h1>
-
             <div className="flex flex-col items-center justify-center pt-4 space-y-4">
-              {/* Item: Porteiros */}
               <div className="bg-[#B7FDCC4D] w-[360px] rounded-[10px] flex py-6 px-4 shadow-md">
                 <img src="../Building.png" alt="" className="w-12 h-12 flex-shrink-0" />
                 <div className="flex flex-col px-4">
@@ -103,7 +93,6 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* Item: Zeladoria */}
               <div className="bg-[#F3E8FF] w-[360px] rounded-[10px] flex py-6 px-4 shadow-md">
                 <img src="../Broom.png" alt="" className="w-12 h-12 flex-shrink-0" />
                 <div className="flex flex-col px-4">
@@ -111,8 +100,6 @@ const Login = () => {
                   <h1 className="text-purple-600 text-sm">Manutenção e limpeza</h1>
                 </div>
               </div>
-
-              {/* Item: Síndico */}
               <div className="bg-[#6B98F94D] w-[360px] rounded-[10px] flex py-6 px-4 shadow-md">
                 <img src="../User.png" alt="" className="w-12 h-12 flex-shrink-0" />
                 <div className="flex flex-col px-4">
@@ -122,10 +109,7 @@ const Login = () => {
               </div>
             </div>
           </div>
-
-          {/* Card 2: Login */}
           <div className="w-[440px] bg-white rounded-[10px] shadow-xl flex-shrink-0">
-
             <div className="bg-gradient-to-r from-[#5e5ced] to-[#572486] w-full h-[170px] rounded-t-[10px] flex items-center justify-center flex-col p-4">
               <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-900 rounded-full flex items-center justify-center shadow-md">
                 <img src="../LOGIN.png" alt="" className="w-10 h-10" />
@@ -178,12 +162,9 @@ const Login = () => {
                   </button>
                 </div>
               </div>
-
-              {/* Removido Checkbox Lembrar-me */}
               <div className="flex items-center justify-end mb-6">
                 <a href="#" className='text-sm font-medium text-[#2B67EC] hover:underline'>Esqueci minha senha</a>
               </div>
-
               <div className="flex items-center justify-center">
                 <button 
                   type="submit" 
@@ -196,8 +177,6 @@ const Login = () => {
             </form>
           </div>
         </div>
-
-        {/* Aviso de Segurança */}
         <div className="bg-white w-full flex items-center justify-center py-12 px-10">
           <div className="w-[1100px] h-auto bg-[#FEF9C3] rounded-[5px] border border-[#B57F44] flex items-center justify-start px-16 py-8 shadow-sm">
             <div className="w-18 h-18 bg-[#F1CB51] rounded-[10px] flex items-center justify-center flex-shrink-0 mr-6">
@@ -212,7 +191,6 @@ const Login = () => {
           </div>
         </div>
       </main>
-
       <footer>
         <Footer />
       </footer>

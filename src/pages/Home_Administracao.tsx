@@ -41,11 +41,10 @@ interface AreaComumBackend {
 }
 
 const Administracao = () => {
-  // --- Estados de Controle ---
   const [isVotacaoModalOpen, setIsVotacaoModalOpen] = useState(false);
   const [isComunicacaoModalOpen, setIsComunicacaoModalOpen] = useState(false);
   const [detalhesClienteId, setDetalhesClienteId] = useState<string | null>(null);
-  
+
   const [areaParaEditar, setAreaParaEditar] = useState<AreaComumBackend | null>(null);
   const [formArea, setFormArea] = useState({ 
       nome: '', 
@@ -54,31 +53,24 @@ const Administracao = () => {
       status: 'ATIVO' 
   });
 
-  // --- Dados da Tela ---
   const [value, setValue] = useState(new Date()); 
   const [adminName, setAdminName] = useState('Colaborador');
-  
   const [votacoes, setVotacoes] = useState<Votacao[]>([]);
   const [moradores, setMoradores] = useState<Cliente[]>([]);
   const [pendentes, setPendentes] = useState<Cliente[]>([]);
   const [busca, setBusca] = useState('');
   const [areas, setAreas] = useState<AreaComumBackend[]>([]);
-  
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAreas, setIsLoadingAreas] = useState(false); 
 
-  // --- Lógica de Saudação Automática ---
+
   const getSaudacao = () => {
     const hora = new Date().getHours();
-    // Das 06:00 às 11:59 -> Bom dia
     if (hora >= 6 && hora < 12) return 'Bom dia';
-    // Das 12:00 às 18:59 -> Boa tarde
     if (hora >= 12 && hora < 19) return 'Boa tarde';
-    // Resto (19:00 às 05:59) -> Boa noite
     return 'Boa noite';
   };
 
-  // 1. Carrega dados gerais
   const fetchInitialData = async () => {
     try {
       setIsLoading(true);
@@ -97,7 +89,6 @@ const Administracao = () => {
     }
   };
 
-  // 2. Função específica para carregar Áreas baseado na data
   const fetchAreasPorData = async (dataSelecionada: Date) => {
       try {
           setIsLoadingAreas(true);
@@ -116,7 +107,6 @@ const Administracao = () => {
   };
 
   useEffect(() => {
-    // Busca do sessionStorage (Segurança)
     const nomeSalvo = sessionStorage.getItem('admin_nome') || localStorage.getItem('admin_nome');
     if (nomeSalvo) {
         setAdminName(nomeSalvo.split(' ')[0]);
@@ -238,7 +228,6 @@ const Administracao = () => {
       <ModalVot isOpen={isVotacaoModalOpen} onClose={() => setIsVotacaoModalOpen(false)} />
       <ModalComu isOpen={isComunicacaoModalOpen} onClose={() => setIsComunicacaoModalOpen(false)} />
 
-      {/* --- MODAL DE EDIÇÃO DE ÁREA --- */}
       {areaParaEditar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
@@ -305,12 +294,9 @@ const Administracao = () => {
       )}
 
       <main className='bg-[#EAEAEA] min-h-screen'>
-        {/* Header e Saudação */}
         <div className="bg-white flex flex-col items-center justify-center py-6 md:py-10">
           <div className="flex items-center justify-start w-[96%] max-w-[2300px] h-auto min-h-[150px] bg-gradient-to-r from-[#5e5ced] to-[#572486] rounded-xl p-6 md:p-10 shadow-lg">
             <div className="flex flex-col items-start text-white space-y-1">
-              
-              {/* AQUI ESTÁ A MUDANÇA DA SAUDAÇÃO */}
               <h1 className="text-2xl md:text-[40px] font-semibold leading-tight m-0">
                  {getSaudacao()}, {adminName}
               </h1> 
@@ -324,7 +310,6 @@ const Administracao = () => {
           </div>
         </div>
 
-        {/* Atalhos */}
         <div className="flex flex-col items-center justify-center p-4 md:p-8">
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-4 md:p-10 shadow-lg flex flex-col gap-4 md:gap-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
@@ -353,7 +338,6 @@ const Administracao = () => {
 
         <div className="flex justify-center items-start px-4 md:px-6 mt-6 pb-6">
           <div className="flex flex-col-reverse lg:flex-row gap-6 lg:gap-10 w-full max-w-[1600px]">
-            {/* Votações */}
             <div className="flex-1 w-full bg-white rounded-2xl p-4 md:p-10 shadow-2xl flex flex-col">
               <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Votações em andamento</h1>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -386,7 +370,6 @@ const Administracao = () => {
               </div>
             </div>
 
-            {/* Financeiro */}
             <div className="w-full lg:w-[400px] bg-white rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col">
               <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Resumo Financeiro</h1>
               <div className="flex flex-col gap-4">
@@ -407,7 +390,6 @@ const Administracao = () => {
           </div>
         </div>
 
-        {/* --- GESTÃO DE ÁREAS COMUNS --- */}
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
@@ -489,8 +471,6 @@ const Administracao = () => {
             </div>
           </div>
         </div>
-
-        {/* Pendentes e Moradores */}
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
             <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Cadastros Pendentes de Aprovação</h1>
@@ -548,12 +528,11 @@ const Administracao = () => {
                  className="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 outline-none" 
                  placeholder="Buscar por nome ou casa..." 
                  value={busca}
-                 onChange={(e) => setBusca(e.target.value)} // Atualiza o estado
+                 onChange={(e) => setBusca(e.target.value)} 
                />
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200'>
-              {/* Usa a lista filtrada em vez da original */}
               {moradoresFiltrados.length === 0 && (
                   <p className="text-gray-500 col-span-2 text-center py-4">Nenhum morador encontrado.</p>
               )}

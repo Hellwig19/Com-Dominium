@@ -9,7 +9,6 @@ interface ModalProps {
   onRejeitar: (id: string) => void;
 }
 
-// Tipos completos para os detalhes
 interface DetalhesCliente {
   id: string;
   nome: string;
@@ -45,20 +44,15 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
 
   if (!isOpen) return null;
 
-  // Helper para formatar data
   const formatDate = (iso: string) => new Date(iso).toLocaleDateString('pt-BR');
 
   return (
     <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] backdrop-blur-sm flex items-center justify-center z-50 p-4">     
         <div className="bg-white rounded-xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl">
-        
-        {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-800">Análise de Cadastro</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
-
-        {/* Conteúdo com Scroll */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
           {loading ? (
             <div className="flex justify-center items-center h-full">
@@ -66,8 +60,6 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
             </div>
           ) : data ? (
             <div className="space-y-6">
-              
-              {/* 1. Dados Pessoais */}
               <section className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                 <h3 className="text-lg font-bold text-blue-700 mb-4 border-b pb-2">Dados Pessoais & Contato</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
@@ -86,8 +78,6 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
                   )}
                 </div>
               </section>
-
-              {/* 2. Residência */}
               <section className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                 <h3 className="text-lg font-bold text-purple-700 mb-4 border-b pb-2">Residência</h3>
                 {data.residencias.map((res, idx) => (
@@ -99,8 +89,6 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
                   </div>
                 ))}
               </section>
-
-              {/* 3. Documentos (IMPORTANTE) */}
               <section className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                 <h3 className="text-lg font-bold text-orange-600 mb-4 border-b pb-2">Documentos Anexados</h3>
                 
@@ -110,8 +98,6 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {data.documentos.map((doc) => (
                       <div key={doc.id} className="flex flex-col bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                        
-                        {/* Cabeçalho do Card */}
                         <div className="p-3 border-b border-gray-200 bg-gray-100 flex justify-between items-center">
                           <span className="font-bold text-gray-700 text-sm uppercase">{doc.tipo.replace('_', ' ')}</span>
                           <a 
@@ -123,10 +109,7 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
                             Ver Original ↗
                           </a>
                         </div>
-
-                        {/* Área da Imagem */}
                         <div className="relative w-full h-48 bg-gray-200 flex items-center justify-center">
-                          {/* Verifica se é PDF ou Imagem */}
                           {doc.nomeArquivo.toLowerCase().endsWith('.pdf') ? (
                             <div className="text-center p-4">
                               <p className="text-gray-500 mb-2">Este documento é um PDF</p>
@@ -138,7 +121,7 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
                             <img 
                               src={doc.url} 
                               alt={doc.tipo} 
-                              className="w-full h-full object-contain" // 'object-contain' mostra a imagem inteira sem cortar
+                              className="w-full h-full object-contain" 
                             />
                           )}
                         </div>
@@ -147,8 +130,6 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
                   </div>
                 )}
               </section>
-
-              {/* 4. Veículos e Familiares */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <section className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
                   <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Veículos ({data.veiculos.length})</h3>
@@ -183,7 +164,6 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
           )}
         </div>
 
-        {/* Footer com Ações */}
         <div className="p-6 border-t border-gray-200 flex justify-end gap-4 bg-gray-50 rounded-b-xl">
           <button 
             onClick={onClose} 

@@ -7,16 +7,13 @@ export default function Header() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 1. Recupera os dados salvos no Login (Session tem prioridade)
     const nomeSalvo = sessionStorage.getItem('admin_nome') || localStorage.getItem('admin_nome');
     const nivelSalvo = sessionStorage.getItem('admin_nivel') || localStorage.getItem('admin_nivel');
 
-    // 2. Formata o Nome (Pega apenas o primeiro nome)
     if (nomeSalvo) {
       setNome(nomeSalvo.split(' ')[0]);
     }
 
-    // 3. Define o Cargo baseado no Nível
     const nivel = Number(nivelSalvo);
     
     switch (nivel) {
@@ -34,13 +31,10 @@ export default function Header() {
     }
   }, []);
 
-  // Função para deslogar corretamente
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Limpa todos os dados de autenticação
     sessionStorage.clear();
     localStorage.clear();
-    // Redireciona para a tela de login
     navigate('/');
   };
 
@@ -51,16 +45,12 @@ export default function Header() {
           <a href="/admin">
             <img src="../Logo.png" alt="Logo" className="" />
           </a>
-          {/* Atualiza o título também com o cargo dinâmico */}
           <h1 className="text-white px-4 pt-7">Residencial Jardins • {cargo}</h1>
         </div>
 
         <div className="gap-2 flex items-center justify-center">
           <img src="../Doorbell.png" alt="Notificações" />
-          
           <div className="bg-[#EAEAEA] rounded-full h-12 w-[0.1px] mx-2"></div>
-          
-          {/* Placeholder para foto de perfil (pode ser lógica futura) */}
           <div className="bg-[#EAEAEA] rounded-full h-12 w-12 flex items-center justify-center text-[#572486] font-bold text-xl">
              {nome.charAt(0)}
           </div>
