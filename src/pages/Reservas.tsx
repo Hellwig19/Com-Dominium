@@ -36,6 +36,10 @@ const Reservas = () => {
   const maxAllowed = new Date(today);
   maxAllowed.setMonth(maxAllowed.getMonth() + 6);
 
+  // helper month boundaries for calendar navigation
+  const minMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const maxMonthStart = new Date(maxAllowed.getFullYear(), maxAllowed.getMonth(), 1);
+
   const toISO = (d: Date) => {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -82,6 +86,11 @@ const Reservas = () => {
   }, []);
 
   const abrirModalArea = (area: AreaComumBackend) => {
+    if (areaParaEditar?.id === area.id) {
+      // same area clicked -> toggle close
+      setAreaParaEditar(null);
+      return;
+    }
     setAreaParaEditar(area);
     setFormArea({ nome: area.nome, preco: String(area.preco), capacidade: String(area.capacidade), status: area.statusConfig });
   };
@@ -153,89 +162,29 @@ const Reservas = () => {
 
       {/* Big Calendar styles (uses its own CSS import) */}
 
-      {areaParaEditar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
-            <div className="bg-[#5e5ced] p-4 flex justify-between items-center">
-              <h2 className="text-white font-bold text-lg">Editar Área Comum</h2>
-              <button onClick={() => setAreaParaEditar(null)} className="text-white hover:bg-white/20 rounded-full p-1">
-                <span className="text-xl font-bold">✕</span>
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Área</label>
-                <input type="text" className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none" value={formArea.nome} onChange={e => setFormArea({ ...formArea, nome: e.target.value })} />
-              </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Taxa (R$)</label>
-                  <input type="text" className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none" value={formArea.preco} onChange={e => setFormArea({ ...formArea, preco: e.target.value })} placeholder="0.00" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Capacidade</label>
-                  <input type="number" className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none" value={formArea.capacidade} onChange={e => setFormArea({ ...formArea, capacidade: e.target.value })} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status de Disponibilidade</label>
-                <select className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none" value={formArea.status} onChange={e => setFormArea({ ...formArea, status: e.target.value })}>
-                  <option value="ATIVO">Ativo (Disponível para Reserva)</option>
-                  <option value="MANUTENCAO">Em Manutenção (Bloqueado)</option>
-                  <option value="OCUPADO">Ocupado / Bloqueado Manualmente</option>
-                  <option value="INATIVO">Inativo (Oculto no app)</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">* "Manutenção" e "Ocupado" impedem novas reservas no App.</p>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button onClick={() => setAreaParaEditar(null)} className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
-                <button onClick={salvarArea} className="flex-1 py-2 bg-[#5e5ced] text-white rounded-lg hover:bg-[#4a48c9] font-medium">Salvar Alterações</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* modal moved inside the main panel so it doesn't cover whole app */}
 
       <main className="bg-[#EAEAEA] min-h-screen">
           <div className="flex justify-center items-center p-6 md:p-10">
           <div className="w-full max-w-[1800px] bg-white rounded-2xl shadow-2xl p-6 md:p-12 min-h-[760px]">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-800">Gestão de Áreas Comuns</h1>
-              <div className="text-sm text-gray-500">Visualizando: <span className="font-medium text-gray-700">{value.toLocaleDateString('pt-BR')}</span></div>
+            <div className="flex items-center justify-center mb-4">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 text-center">Gestão de Áreas Comuns</h1>
             </div>
 
             {/* Controls: removed manual day navigation buttons so days are selectable directly on the calendar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-red-500 inline-block" />
-                  <span className="text-sm text-gray-600">Data bloqueada</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-blue-200 inline-block border border-blue-300" />
-                  <span className="text-sm text-gray-600">Data selecionada</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-gray-200 inline-block" />
-                  <span className="text-sm text-gray-600">Fora do intervalo</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <label className="text-sm text-gray-600">Filtrar status:</label>
-                <select className="border rounded-lg p-2 text-sm" defaultValue="all">
-                  <option value="all">Todos</option>
-                  <option value="ATIVO">Ativo</option>
-                  <option value="MANUTENCAO">Manutenção</option>
-                  <option value="OCUPADO">Ocupado</option>
-                  <option value="INATIVO">Inativo</option>
-                </select>
-              </div>
+              {/* legend removed per UX request */}
+              {/* selected date displayed at the top (more visible) */}
             </div>
 
               <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start">
               {/* Areas list (left column on large screens) - fixed width so calendar won't shrink */}
-              <div className="w-full order-2 lg:order-1 max-h-[780px] overflow-y-auto pr-6" style={{ maxWidth: 480 }}>
+              <div className="w-full order-2 lg:order-1 pr-6" style={{ maxWidth: 480 }}>
                 <div className="flex flex-col gap-4">
+                  <div className="mb-2">
+                    <span className="text-sm text-gray-600 mr-2">Data selecionada:</span>
+                    <span className="inline-block bg-blue-50 border border-blue-100 text-blue-700 font-medium px-3 py-1 rounded-md text-sm">{value.toLocaleDateString('pt-BR')}</span>
+                  </div>
                   {isLoadingAreas && <p className="text-center py-4 text-blue-600">Buscando disponibilidade para esta data...</p>}
 
                   {!isLoadingAreas && areas.map((area) => {
@@ -261,7 +210,8 @@ const Reservas = () => {
                     }
 
                     return (
-                      <div key={area.id} className="flex flex-col sm:flex-row items-center justify-between bg-gray-50 rounded-xl p-4 shadow-md border-l-4 transition-all hover:shadow-lg" style={{ borderLeftColor: borderColor }}>
+                      <div key={area.id} className="flex flex-col gap-2">
+                        <div className="flex flex-col sm:flex-row items-center justify-between bg-gray-50 rounded-xl p-4 shadow-md border-l-4 transition-all hover:shadow-lg" style={{ borderLeftColor: borderColor }}>
                         <div className="flex items-center gap-4 mb-4 sm:mb-0">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-xl ${iconBg}`}>
                             {isManutencao ? '🛠️' : '🏠'}
@@ -273,16 +223,53 @@ const Reservas = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-6">
-                          <div className="text-right">
-                            <p className="text-xs text-gray-500">Taxa de uso</p>
-                            <span className="text-gray-800 font-bold text-lg">R$ {area.preco}</span>
-                          </div>
+                                <div className="flex items-center gap-6">
+                                  <div className="text-right">
+                                    <p className="text-xs text-gray-500">Taxa de uso</p>
+                                    <span className="text-gray-800 font-bold text-lg">R$ {area.preco}</span>
+                                  </div>
 
-                          <button onClick={() => abrirModalArea(area)} className="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition text-sm font-medium shadow-sm">Editar / Manutenção</button>
-                        </div>
-                      </div>
-                    );
+                                  <button onClick={() => abrirModalArea(area)} className="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition text-sm font-medium shadow-sm">Editar / Manutenção</button>
+                                </div>
+                              </div>
+
+                              {areaParaEditar && areaParaEditar.id === area.id && (
+                                <div className="mt-3 bg-white border border-gray-100 rounded-lg p-4 shadow-sm">
+                                  <h4 className="font-semibold text-gray-800 mb-2">Editar {area.nome}</h4>
+                                  <div className="grid grid-cols-1 gap-3">
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Área</label>
+                                      <input type="text" className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none" value={formArea.nome} onChange={e => setFormArea({ ...formArea, nome: e.target.value })} />
+                                    </div>
+                                    <div className="flex gap-3">
+                                      <div className="flex-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Taxa (R$)</label>
+                                        <input type="text" className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none" value={formArea.preco} onChange={e => setFormArea({ ...formArea, preco: e.target.value })} placeholder="0.00" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Capacidade</label>
+                                        <input type="number" className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none" value={formArea.capacidade} onChange={e => setFormArea({ ...formArea, capacidade: e.target.value })} />
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 mb-1">Status de Disponibilidade</label>
+                                      <select className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none" value={formArea.status} onChange={e => setFormArea({ ...formArea, status: e.target.value })}>
+                                        <option value="ATIVO">Ativo (Disponível para Reserva)</option>
+                                        <option value="MANUTENCAO">Em Manutenção (Bloqueado)</option>
+                                        <option value="OCUPADO">Ocupado / Bloqueado Manualmente</option>
+                                        <option value="INATIVO">Inativo (Oculto no app)</option>
+                                      </select>
+                                      <p className="text-xs text-gray-500 mt-1">* "Manutenção" e "Ocupado" impedem novas reservas no App.</p>
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                      <button onClick={() => setAreaParaEditar(null)} className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                                      <button onClick={salvarArea} className="flex-1 py-2 bg-[#5e5ced] text-white rounded-lg hover:bg-[#4a48c9] font-medium">Salvar Alterações</button>
+                                    </div>
+                                  </div>
+                                </div>
+                                )}
+                            </div>
+                          );
                   })}
 
                   {areas.length === 0 && !isLoadingAreas && (
@@ -295,6 +282,7 @@ const Reservas = () => {
               <div className="w-full lg:flex-1 flex-shrink-0 order-1 lg:order-2">
                 <div className="bg-gray-50 rounded-xl shadow-md p-0 lg:p-2 flex justify-center items-start h-full w-full">
                     <div className="w-full px-0 lg:px-2">
+                      {/* Custom toolbar prevents navigating to months before current or after +6 months */}
                       <BigCalendar
                         localizer={localizer}
                         events={events}
@@ -302,15 +290,45 @@ const Reservas = () => {
                         endAccessor="end"
                         defaultView="month"
                         views={["month"]}
-                        onNavigate={(date: Date) => setValue(new Date(date))}
+                        // clamp navigation between minMonthStart and maxMonthStart
+                        onNavigate={(date: Date) => {
+                          const targetMonthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+                          if (targetMonthStart < minMonthStart) return; // ignore
+                          if (targetMonthStart > maxMonthStart) return; // ignore
+                          setValue(new Date(date));
+                        }}
                         date={value}
+                        components={{
+                          toolbar: function CustomToolbar(toolbarProps: any) {
+                            const { label, onNavigate, date } = toolbarProps;
+                            const currentMonthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+                            const prevDisabled = currentMonthStart <= minMonthStart;
+                            const nextDisabled = currentMonthStart >= maxMonthStart;
+                            return (
+                              <div className="rbc-toolbar flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-4 mr-6">
+                                  <button className="px-3 py-1 rounded-md border" onClick={() => !prevDisabled && onNavigate('PREV')} disabled={prevDisabled} aria-label="Anterior">‹</button>
+                                  <button className="px-3 py-1 rounded-md border" onClick={() => onNavigate('TODAY')} aria-label="Hoje">Hoje</button>
+                                  <button className="px-3 py-1 rounded-md border" onClick={() => !nextDisabled && onNavigate('NEXT')} disabled={nextDisabled} aria-label="Próximo">›</button>
+                                </div>
+                                <div className="flex-1 text-center text-lg font-medium">{label}</div>
+                                <div className="w-24" />
+                              </div>
+                            );
+                          }
+                        }}
                         selectable
                         onSelectSlot={(slotInfo: { start: Date; end: Date; slots?: Date[]; action?: string }) => {
                           const clicked = new Date(slotInfo.start);
                           const clickedDay = new Date(clicked.getFullYear(), clicked.getMonth(), clicked.getDate());
                           const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                           const maxStart = new Date(maxAllowed.getFullYear(), maxAllowed.getMonth(), maxAllowed.getDate());
-                          if (clickedDay < todayStart || clickedDay > maxStart) {
+                          // if clicked a past day, ignore silently (not selectable)
+                          if (clickedDay < todayStart) {
+                            return;
+                          }
+                          // if beyond allowed max, show alert and ignore
+                          if (clickedDay > maxStart) {
                             alert('Selecione uma data entre hoje e +6 meses.');
                             return;
                           }
@@ -331,27 +349,19 @@ const Reservas = () => {
                           const dayOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
                           const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                           const maxStart = new Date(maxAllowed.getFullYear(), maxAllowed.getMonth(), maxAllowed.getDate());
-                          if (dayOnly < todayStart || dayOnly > maxStart) {
-                            return { style: { color: '#9ca3af', opacity: 0.45 } };
-                          }
+                            if (dayOnly < todayStart || dayOnly > maxStart) {
+                              // past days: muted + not selectable
+                              return { style: { color: '#9ca3af', opacity: 0.45, pointerEvents: 'none' } };
+                            }
                           return {};
                         }}
-                        style={{ height: 980, width: '100%' }}
+                        style={{ height: 720, width: '100%' }}
                         messages={{ allDay: 'Dia inteiro', previous: '‹', next: '›', today: 'Hoje' }}
                       />
                     </div>
                 </div>
                 {/* footer controls for selected date (block/unblock) */}
-                <div className="mt-4 w-full flex items-center justify-between gap-4">
-                  <div className="text-sm text-gray-600">Selecionado: <span className="font-medium text-gray-800">{value.toLocaleDateString('pt-BR')}</span></div>
-                  <div>
-                    <button
-                      onClick={() => toggleBlockDate(value, true)}
-                      className={`px-4 py-2 rounded-lg font-medium ${blockedDates.includes(toISO(value)) ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
-                      {blockedDates.includes(toISO(value)) ? 'Remover bloqueio' : 'Bloquear data'}
-                    </button>
-                  </div>
-                </div>
+                {/* selected date moved to controls area above the areas list */}
               </div>
             </div>
           </div>

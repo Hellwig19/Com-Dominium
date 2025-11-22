@@ -38,18 +38,27 @@ export default function Header() {
     navigate('/');
   };
 
+  const getHomePath = () => {
+    const nivelSalvo = Number(sessionStorage.getItem('admin_nivel') || localStorage.getItem('admin_nivel') || 0);
+    if (nivelSalvo === 3) return '/portaria';
+    if (nivelSalvo === 2 || nivelSalvo === 5) return '/admin';
+    return '/';
+  };
+
   return (
     <>
       <header className="w-full h-[110px] bg-gradient-to-r from-[#5e5ced] to-[#572486] flex items-center justify-between px-10">
         <div className="flex items-center flex-shrink-0">
-          <a href="/admin">
-            <img src="../Logo.png" alt="Logo" className="" />
+          <a href={getHomePath()} onClick={(e) => { e.preventDefault(); navigate(getHomePath()); }}>
+            <img src="../Logo.png" alt="Logo" className="h-24 w-auto mr-4" />
           </a>
-          <h1 className="text-white px-4 pt-7">Residencial Jardins • {cargo}</h1>
+          <h1 className="text-white text-2xl font-normal leading-none flex items-center">
+            Moradas Club 1
+            <span className="text-2xl font-normal opacity-90 ml-3">• {cargo}</span>
+          </h1>
         </div>
 
         <div className="gap-2 flex items-center justify-center">
-          <img src="../Doorbell.png" alt="Notificações" />
           <div className="bg-[#EAEAEA] rounded-full h-12 w-[0.1px] mx-2"></div>
           <div className="bg-[#EAEAEA] rounded-full h-12 w-12 flex items-center justify-center text-[#572486] font-bold text-xl">
              {nome.charAt(0)}

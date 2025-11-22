@@ -93,10 +93,13 @@ export default function HomePortaria() {
       const res = await api.get('/clientes'); 
       const clientes: any[] = res.data;
 
-      const encontrado = clientes.find(c => 
-        c.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
-        c.cpf.includes(termoBusca)
-      );
+      const termoLower = termoBusca.toLowerCase();
+      const encontrado = clientes.find((c: any) => {
+        const nomeMatch = c.nome && c.nome.toLowerCase().includes(termoLower);
+        const cpfMatch = c.cpf && c.cpf.includes(termoBusca);
+        const casaMatch = c.residencias && Array.isArray(c.residencias) && c.residencias.some((r: any) => String(r.numeroCasa).toLowerCase().includes(termoLower));
+        return nomeMatch || cpfMatch || casaMatch;
+      });
 
       if (encontrado) {
         const resDetalhes = await api.get(`/clientes/${encontrado.id}`);
@@ -194,7 +197,7 @@ export default function HomePortaria() {
                   <input 
                     type="search" 
                     className="block w-full p-2.5 pl-4 pr-10 text-base text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-blue-400 focus:border-blue-400 placeholder-gray-500 shadow-inner transition duration-150 ease-in-out" 
-                    placeholder="Buscar por nome ou CPF..." 
+                    placeholder="Buscar por nome ou nº da casa..." 
                     value={termoBusca}
                     onChange={(e) => setTermoBusca(e.target.value)}
                   />

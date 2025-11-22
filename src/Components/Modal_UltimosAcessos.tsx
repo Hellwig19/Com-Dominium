@@ -23,7 +23,7 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
   const [filtro, setFiltro] = useState<'TODOS' | 'DENTRO' | 'SAIU'>('TODOS');
   const [termo, setTermo] = useState('');
 
-  if (!isOpen) return null;
+    if (!isOpen) return null;
 
   const listaFiltrada = visitantes.filter((v) => {
     const bateFiltro = filtro === 'TODOS' ? true : v.status === filtro;
@@ -33,8 +33,8 @@ export default function ModalUltimosAcessos({ isOpen, onClose, visitantes, onReg
     return bateFiltro && bateBusca;
   });
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-fade-in">
         <div className="bg-gradient-to-r from-[#5e5ced] to-[#572486] p-6 rounded-t-xl flex justify-between items-center text-white">
             <div>

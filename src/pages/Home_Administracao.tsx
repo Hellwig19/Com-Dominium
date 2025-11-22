@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
  
 import Footer from '../Components/footer';
 import Header from "../Components/Header";
@@ -30,19 +30,17 @@ interface Cliente {
   createdAt: string;
 }
 
- 
 const Administracao = () => {
   const [isVotacaoModalOpen, setIsVotacaoModalOpen] = useState(false);
   const [isComunicacaoModalOpen, setIsComunicacaoModalOpen] = useState(false);
   const [detalhesClienteId, setDetalhesClienteId] = useState<string | null>(null);
 
-
-  
-    const [adminName, setAdminName] = useState('Colaborador');
-    const [votacoes, setVotacoes] = useState<Votacao[]>([]);
-    const [moradores, setMoradores] = useState<Cliente[]>([]);
-    const [busca, setBusca] = useState('');
-
+  const [adminName, setAdminName] = useState('Colaborador');
+  const [votacoes, setVotacoes] = useState<Votacao[]>([]);
+  const [moradores, setMoradores] = useState<Cliente[]>([]);
+  const [pendentes, setPendentes] = useState<Cliente[]>([]);
+  const [isLoadingPendentes, setIsLoadingPendentes] = useState(true);
+  const [busca, setBusca] = useState('');
 
   const getSaudacao = () => {
     const hora = new Date().getHours();
@@ -64,12 +62,40 @@ const Administracao = () => {
     }
   };
 
+  // Modificado para aceitar showLoading: boolean (padrão true)
+  // Isso permite atualizar em background sem mostrar o spinner
+  const fetchPendentes = async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoadingPendentes(true);
+      
+      const res = await api.get('/clientes?pendentes=true');
+      setPendentes(res.data || []);
+    } catch (err) {
+      console.error('Erro ao carregar cadastros pendentes', err);
+    } finally {
+      if (showLoading) setIsLoadingPendentes(false);
+    }
+  };
+
+  // Effect para carregar dados iniciais e configurar o Polling
   useEffect(() => {
     const nomeSalvo = sessionStorage.getItem('admin_nome') || localStorage.getItem('admin_nome');
     if (nomeSalvo) {
         setAdminName(nomeSalvo.split(' ')[0]);
     }
+
+    // 1. Carga Inicial (com loading visual se necessário)
     fetchInitialData();
+    fetchPendentes(true);
+
+    // 2. Configura atualização automática a cada 5 segundos
+    const intervalId = setInterval(() => {
+      fetchInitialData();
+      fetchPendentes(false); // false para atualização silenciosa
+    }, 5000);
+
+    // 3. Limpa o intervalo ao desmontar o componente
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleAprovar = async (id: string) => {
@@ -77,7 +103,9 @@ const Administracao = () => {
     try {
       await api.patch(`/clientes/${id}/aprovar`);
       alert("Cliente aprovado com sucesso!");
-      fetchInitialData(); 
+      // Atualiza imediatamente após ação
+      await fetchInitialData();
+      await fetchPendentes(false);
     } catch (error) {
       alert("Erro ao aprovar cliente.");
     }
@@ -88,19 +116,13 @@ const Administracao = () => {
     try {
       await api.delete(`/clientes/${id}/rejeitar`);
       alert("Cliente rejeitado.");
-      fetchInitialData();
+      // Atualiza imediatamente após ação
+      await fetchInitialData();
+      await fetchPendentes(false);
     } catch (error) {
       alert("Erro ao rejeitar cliente.");
     }
   };
-
-  
-
-
-
-
-
- 
 
   const getCasa = (cliente: Cliente) => {
     if (cliente.residencias && cliente.residencias.length > 0) {
@@ -108,8 +130,6 @@ const Administracao = () => {
     }
     return "S/N";
   };
-
-  
 
   const handleAprovarWrapper = async (id: string) => {
     await handleAprovar(id);
@@ -127,7 +147,7 @@ const Administracao = () => {
     const casa = getCasa(morador).toLowerCase();
     
     return nome.includes(termo) || casa.includes(termo);
-});
+  });
 
   return (
     <>
@@ -164,90 +184,77 @@ const Administracao = () => {
 
         <div className="flex flex-col items-center justify-center p-4 md:p-8">
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-4 md:p-10 shadow-lg flex flex-col gap-4 md:gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
-              <a href="/cadastros-pendentes">
-                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                  <img src="../Complaint.png" alt="" className="w-8 h-8" /><span className="text-lg">Cadastro de Morador</span>
-                </button>
-              </a>
-              <a href="/reservas">
-                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10">
+              <a href="/reservas" className="w-full">
+                <button className="w-full flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                   <img src="../Account Male.png" alt="" className="w-8 h-8" /><span className="text-lg">Sistemas de Reserva</span>
                 </button>
               </a>
-              <a href="/manutencao">
-                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+              <a href="/manutencao" className="w-full">
+                <button className="w-full flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                   <img src="../Wrench.png" alt="" className="w-8 h-8" /><span className="text-lg">Manutenção/Sugestão</span>
                 </button>
               </a>
             </div>
             <div className="flex justify-center gap-4 md:gap-10">
-                <button onClick={() => setIsComunicacaoModalOpen(true)} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full md:w-1/3 h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                <button onClick={() => setIsComunicacaoModalOpen(true)} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                   <img src="../Plus.png" alt="" className="w-8 h-8" /><span className="text-lg">Novo Comunicado</span>
                 </button>
-                <button onClick={() => setIsVotacaoModalOpen(true)} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full md:w-1/3 h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                <button onClick={() => setIsVotacaoModalOpen(true)} className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                   <img src="../PollAzul.png" alt="" className="w-8 h-8" /><span className="text-lg">Nova Votação</span>
                 </button>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center items-start px-4 md:px-6 mt-6 pb-6">
-          <div className="flex flex-col-reverse lg:flex-row gap-6 lg:gap-10 w-full max-w-[1600px]">
-            <div className="flex-1 w-full bg-white rounded-2xl p-4 md:p-10 shadow-2xl flex flex-col">
-              <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Votações em andamento</h1>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {votacoes.slice(0, 4).map((votacao) => {
-                   const op1 = votacao.opcoes[0];
-                   const op2 = votacao.opcoes[1];
-                   return (
-                    <div key={votacao.id} className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 rounded-xl shadow-md flex flex-col h-full">
-                      <h2 className="text-lg font-semibold text-gray-800 mb-2">{votacao.titulo}</h2>
-                      <p className="text-sm text-gray-600 mb-4 flex-grow">{votacao.descricao}</p>
-                      <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
-                        {op1 && (
-                          <div className="flex items-center gap-2">
-                            <img src="../Done.png" className="w-5 h-5" />
-                            <span className="text-sm font-bold text-green-700">{op1._count.votos} - {op1.texto}</span>
-                          </div>
-                        )}
-                        {op2 && (
-                          <div className="flex items-center gap-2">
-                            <img src="../Multiply.png" className="w-5 h-5" />
-                            <span className="text-sm font-bold text-red-600">{op2._count.votos} - {op2.texto}</span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-center text-gray-400 mt-2">Total: {votacao._count.votos} votos</p>
-                    </div>
-                   );
-                })}
-                {votacoes.length === 0 && <p className="text-gray-500">Nenhuma votação ativa.</p>}
-              </div>
+        {/* Cadastros pendentes - embedded here on Home as requested */}
+        <div id="cadastrosPendentes" className="flex justify-center items-center p-4 md:p-8">
+          <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-6 md:p-10">
+            <div className="flex items-center justify-between mb-4">
+                <h1 className="text-2xl font-bold">Cadastros Pendentes de Aprovação</h1>
+                {/* Indicador discreto de atualização automática */}
+                <div className="flex items-center gap-2">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    <span className="text-xs text-gray-500">Atualização em tempo real</span>
+                </div>
             </div>
 
-            <div className="w-full lg:w-[400px] bg-white rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col">
-              <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Resumo Financeiro</h1>
-              <div className="flex flex-col gap-4">
-                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-md shadow-sm">
-                  <p className="font-semibold text-green-700 text-sm">Receita mensal</p>
-                  <p className="text-green-600 text-xl">R$ 135.269,00 ↑</p>
+            {!isLoadingPendentes && pendentes.length === 0 && (
+              <div className="p-4 bg-green-50 text-green-800 rounded-lg border border-green-200">Nenhum cadastro pendente no momento.</div>
+            )}
+
+            <div className="space-y-4 mt-4">
+              {pendentes.map((cadastro) => (
+                <div key={cadastro.id} className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 flex flex-col md:flex-row md:items-center justify-between shadow-sm gap-4">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h1 className="text-lg font-semibold text-gray-800">{cadastro.nome}</h1>
+                      <div className="px-2 h-5 bg-amber-300 rounded-[5px] flex items-center justify-center">
+                        <span className="text-yellow-800 text-xs font-bold">Pendente</span>
+                      </div>
+                    </div>
+                    <h1 className="text-sm font-medium text-gray-700 mt-1">CPF: {cadastro.cpf} • Casa Nº <strong>{cadastro.residencias && cadastro.residencias.length > 0 ? cadastro.residencias[0].numeroCasa : 'S/N'}</strong></h1>
+                    <h1 className="opacity-70 text-black text-xs font-medium mt-0.5">Solicitado em {new Date(cadastro.createdAt).toLocaleDateString('pt-BR')}</h1>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setDetalhesClienteId(cadastro.id)} className="flex items-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg font-medium text-sm hover:bg-blue-50 transition shadow-sm">
+                      <img src="../View.png" alt="" className="w-4 h-4 mr-2" />Visualizar
+                    </button>
+                    <button onClick={async () => { await handleAprovar(cadastro.id); }} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 transition shadow-md">
+                      <img src="../DoneBranco.png" alt="" className="w-4 h-4 mr-2" />Aprovar
+                    </button>
+                    <button onClick={async () => { await handleRejeitar(cadastro.id); }} className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg font-medium text-sm hover:bg-red-700 transition shadow-md">
+                      <img src="../MultiplyBranco.png" alt="" className="w-4 h-4 mr-2" />Rejeitar
+                    </button>
+                  </div>
                 </div>
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
-                  <p className="font-semibold text-red-700 text-sm">Despesas mensais</p>
-                  <p className="text-red-600 text-xl">R$ 45.269,00 ↓</p>
-                </div>
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md shadow-sm">
-                  <p className="font-semibold text-blue-700 text-sm">Saldo disponível</p>
-                  <p className="text-blue-700 text-xl">R$ 90.000,00</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
-
-        
-        {/* Cadastros pendentes moved to dedicated page: /cadastros-pendentes */}
 
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
@@ -283,6 +290,81 @@ const Administracao = () => {
                   <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Ativo</span>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-center items-start px-4 md:px-6 mt-6 pb-6">
+          <div className="flex flex-col-reverse lg:flex-row gap-6 lg:gap-10 w-full max-w-[2300px]">
+            <div className="w-full lg:flex-[3] bg-white rounded-2xl p-4 md:p-10 shadow-2xl flex flex-col">
+              <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Votações em andamento</h1>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {votacoes.slice(0, 4).map((votacao) => {
+                   const options = (votacao.opcoes || []).slice(0, 2);
+                   const totalVotes = votacao._count?.votos || options.reduce((s, o) => s + (o?._count?.votos || 0), 0);
+                   return (
+                    <div key={votacao.id} className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 rounded-xl shadow-md flex flex-col h-full">
+                      <div className="flex items-start justify-between mb-2">
+                        <h2 className="text-lg font-semibold text-gray-800">{votacao.titulo}</h2>
+                        <span className="text-xs text-gray-500 mt-1">{totalVotes} votos</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4 flex-grow">{votacao.descricao}</p>
+
+                      <div className="space-y-3">
+                        {options
+                          .slice()
+                          .sort((a, b) => {
+                            const aFavor = /favor/i.test(a?.texto || '');
+                            const bFavor = /favor/i.test(b?.texto || '');
+                            if (aFavor === bFavor) return 0;
+                            return aFavor ? -1 : 1;
+                          })
+                          .map((op) => {
+                            const count = op?._count?.votos || 0;
+                            const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                            const isFavor = /favor/i.test(op.texto || '');
+                            const barColor = isFavor ? 'bg-green-500' : 'bg-red-500';
+                            const iconSrc = isFavor ? '../Done.png' : '../Multiply.png';
+                            return (
+                              <div key={op.id} className="flex flex-col">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <img src={iconSrc} className="w-4 h-4" />
+                                    <span className="text-sm font-medium text-gray-800">{op.texto}</span>
+                                  </div>
+                                  <div className="text-sm font-semibold text-gray-700">{count} • {percent}%</div>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden mt-2">
+                                  <div className={`${barColor} h-2 rounded-full`} style={{ width: `${percent}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+
+                    </div>
+                   );
+                })}
+                {votacoes.length === 0 && <p className="text-gray-500">Nenhuma votação ativa.</p>}
+              </div>
+            </div>
+
+            <div className="w-full lg:flex-[1] max-w-[420px] bg-white rounded-2xl shadow-2xl p-6 md:p-8 flex flex-col">
+              <h1 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Resumo Financeiro</h1>
+              <div className="flex flex-col gap-4">
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-md shadow-sm">
+                  <p className="font-semibold text-green-700 text-sm">Receita mensal</p>
+                  <p className="text-green-600 text-xl">R$ 135.269,00 ↑</p>
+                </div>
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
+                  <p className="font-semibold text-red-700 text-sm">Despesas mensais</p>
+                  <p className="text-red-600 text-xl">R$ 45.269,00 ↓</p>
+                </div>
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md shadow-sm">
+                  <p className="font-semibold text-blue-700 text-sm">Saldo disponível</p>
+                  <p className="text-blue-700 text-xl">R$ 90.000,00</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
