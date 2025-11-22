@@ -7,6 +7,8 @@ import Administracao from './pages/Home_Administracao.tsx';
 import Manutencao from './pages/Manutencao.tsx';
 import Portaria from './pages/Home_portaria.tsx';
 import Encomendas from './pages/Encomendas.tsx';
+import Reservas from './pages/Reservas.tsx';
+import CadastrosPendentes from './pages/CadastrosPendentes.tsx';
 import ProtectedRoute from './Components/ProtectedRoute.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -21,6 +23,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Administracao />
             </ProtectedRoute>
           } 
+        />
+
+        <Route 
+          path="/cadastros-pendentes"
+          element={
+            <ProtectedRoute requiredLevel={2}>
+              <CadastrosPendentes />
+            </ProtectedRoute>
+          }
         />
 
         <Route 
@@ -39,6 +50,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Manutencao/>
             </ProtectedRoute>
           } 
+        />
+        <Route 
+          path='/reservas'
+          element={
+            <ProtectedRoute requiredLevel={2}>
+              <Reservas />
+            </ProtectedRoute>
+          }
         />
         
         <Route path='/encomendas' element={<Encomendas />} />

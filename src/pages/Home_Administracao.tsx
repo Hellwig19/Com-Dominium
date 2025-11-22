@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+ 
 import Footer from '../Components/footer';
 import Header from "../Components/Header";
 import DataAtual from '../Components/Data';
@@ -31,37 +30,18 @@ interface Cliente {
   createdAt: string;
 }
 
-interface AreaComumBackend {
-  id: number;
-  nome: string;
-  capacidade: number;
-  preco: number;
-  statusConfig: 'ATIVO' | 'MANUTENCAO' | 'INATIVO' | 'OCUPADO';
-  statusHoje: string; 
-}
-
+ 
 const Administracao = () => {
   const [isVotacaoModalOpen, setIsVotacaoModalOpen] = useState(false);
   const [isComunicacaoModalOpen, setIsComunicacaoModalOpen] = useState(false);
   const [detalhesClienteId, setDetalhesClienteId] = useState<string | null>(null);
 
-  const [areaParaEditar, setAreaParaEditar] = useState<AreaComumBackend | null>(null);
-  const [formArea, setFormArea] = useState({ 
-      nome: '', 
-      preco: '', 
-      capacidade: '', 
-      status: 'ATIVO' 
-  });
 
-  const [value, setValue] = useState(new Date()); 
-  const [adminName, setAdminName] = useState('Colaborador');
-  const [votacoes, setVotacoes] = useState<Votacao[]>([]);
-  const [moradores, setMoradores] = useState<Cliente[]>([]);
-  const [pendentes, setPendentes] = useState<Cliente[]>([]);
-  const [busca, setBusca] = useState('');
-  const [areas, setAreas] = useState<AreaComumBackend[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingAreas, setIsLoadingAreas] = useState(false); 
+  
+    const [adminName, setAdminName] = useState('Colaborador');
+    const [votacoes, setVotacoes] = useState<Votacao[]>([]);
+    const [moradores, setMoradores] = useState<Cliente[]>([]);
+    const [busca, setBusca] = useState('');
 
 
   const getSaudacao = () => {
@@ -73,37 +53,15 @@ const Administracao = () => {
 
   const fetchInitialData = async () => {
     try {
-      setIsLoading(true);
-      const [resVotacoes, resMoradores, resPendentes] = await Promise.all([
+      const [resVotacoes, resMoradores] = await Promise.all([
         api.get('/votacoes'),
         api.get('/clientes'),
-        api.get('/clientes?pendentes=true'),
       ]);
       setVotacoes(resVotacoes.data);
       setMoradores(resMoradores.data);
-      setPendentes(resPendentes.data);
     } catch (error) {
-      console.error("Erro ao carregar dashboard:", error);
-    } finally {
-      setIsLoading(false);
+      console.error('Erro ao carregar dashboard:', error);
     }
-  };
-
-  const fetchAreasPorData = async (dataSelecionada: Date) => {
-      try {
-          setIsLoadingAreas(true);
-          const ano = dataSelecionada.getFullYear();
-          const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0');
-          const dia = String(dataSelecionada.getDate()).padStart(2, '0');
-          const dataString = `${ano}-${mes}-${dia}`;
-
-          const response = await api.get(`/areas/status-dia?data=${dataString}`);
-          setAreas(response.data);
-      } catch (error) {
-          console.error("Erro ao buscar status das áreas:", error);
-      } finally {
-          setIsLoadingAreas(false);
-      }
   };
 
   useEffect(() => {
@@ -113,12 +71,6 @@ const Administracao = () => {
     }
     fetchInitialData();
   }, []);
-
-  useEffect(() => {
-    if (value) {
-        fetchAreasPorData(value);
-    }
-  }, [value]); 
 
   const handleAprovar = async (id: string) => {
     if(!confirm("Tem certeza que deseja aprovar este cadastro?")) return;
@@ -142,46 +94,13 @@ const Administracao = () => {
     }
   };
 
-  const abrirModalArea = (area: AreaComumBackend) => {
-    setAreaParaEditar(area);
-    setFormArea({
-        nome: area.nome,
-        preco: String(area.preco),
-        capacidade: String(area.capacidade),
-        status: area.statusConfig
-    });
-  };
+  
 
-  const salvarArea = async () => {
-      if (!areaParaEditar) return;
 
-      const precoString = String(formArea.preco).replace(',', '.');
-      const capacidadeString = String(formArea.capacidade).replace(',', '.');
 
-      const precoNumber = parseFloat(precoString);
-      const capacidadeNumber = parseFloat(capacidadeString);
 
-      if (isNaN(precoNumber) || isNaN(capacidadeNumber)) {
-          alert("Erro: O preço e a capacidade devem ser números válidos.");
-          return;
-      }
 
-      try {
-          await api.put(`/areas/${areaParaEditar.id}`, {
-              nome: formArea.nome,
-              preco: precoNumber,
-              capacidade: capacidadeNumber,
-              status: formArea.status
-          });
-          alert("Área atualizada com sucesso!");
-          setAreaParaEditar(null);
-          fetchAreasPorData(value); 
-      } catch (error: any) {
-          console.error(error);
-          const msgErro = error.response?.data?.erro || error.response?.data?.message || "Erro desconhecido ao atualizar.";
-          alert(`Não foi possível atualizar: ${msgErro}`);
-      }
-  };
+ 
 
   const getCasa = (cliente: Cliente) => {
     if (cliente.residencias && cliente.residencias.length > 0) {
@@ -190,9 +109,7 @@ const Administracao = () => {
     return "S/N";
   };
 
-  const formatDate = (isoString: string) => {
-    return new Date(isoString).toLocaleDateString('pt-BR');
-  };
+  
 
   const handleAprovarWrapper = async (id: string) => {
     await handleAprovar(id);
@@ -225,73 +142,8 @@ const Administracao = () => {
          onAprovar={handleAprovarWrapper}
          onRejeitar={handleRejeitarWrapper}
        />
-      <ModalVot isOpen={isVotacaoModalOpen} onClose={() => setIsVotacaoModalOpen(false)} />
-      <ModalComu isOpen={isComunicacaoModalOpen} onClose={() => setIsComunicacaoModalOpen(false)} />
-
-      {areaParaEditar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
-                <div className="bg-[#5e5ced] p-4 flex justify-between items-center">
-                    <h2 className="text-white font-bold text-lg">Editar Área Comum</h2>
-                    <button onClick={() => setAreaParaEditar(null)} className="text-white hover:bg-white/20 rounded-full p-1">
-                        <span className="text-xl font-bold">✕</span>
-                    </button>
-                </div>
-                <div className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Área</label>
-                        <input 
-                            type="text" 
-                            className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none"
-                            value={formArea.nome}
-                            onChange={e => setFormArea({...formArea, nome: e.target.value})}
-                        />
-                    </div>
-                    <div className="flex gap-4">
-                        <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Taxa (R$)</label>
-                            <input 
-                                type="text"
-                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none"
-                                value={formArea.preco}
-                                onChange={e => setFormArea({...formArea, preco: e.target.value})}
-                                placeholder="0.00"
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Capacidade</label>
-                            <input 
-                                type="number" 
-                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none"
-                                value={formArea.capacidade}
-                                onChange={e => setFormArea({...formArea, capacidade: e.target.value})}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Status de Disponibilidade</label>
-                        <select 
-                            className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#5e5ced] outline-none"
-                            value={formArea.status}
-                            onChange={e => setFormArea({...formArea, status: e.target.value})}
-                        >
-                            <option value="ATIVO">Ativo (Disponível para Reserva)</option>
-                            <option value="MANUTENCAO">Em Manutenção (Bloqueado)</option>
-                            <option value="OCUPADO">Ocupado / Bloqueado Manualmente</option>
-                            <option value="INATIVO">Inativo (Oculto no app)</option>
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">
-                            * "Manutenção" e "Ocupado" impedem novas reservas no App.
-                        </p>
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                        <button onClick={() => setAreaParaEditar(null)} className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
-                        <button onClick={salvarArea} className="flex-1 py-2 bg-[#5e5ced] text-white rounded-lg hover:bg-[#4a48c9] font-medium">Salvar Alterações</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-      )}
+        <ModalVot isOpen={isVotacaoModalOpen} onClose={() => setIsVotacaoModalOpen(false)} />
+        <ModalComu isOpen={isComunicacaoModalOpen} onClose={() => setIsComunicacaoModalOpen(false)} />
 
       <main className='bg-[#EAEAEA] min-h-screen'>
         <div className="bg-white flex flex-col items-center justify-center py-6 md:py-10">
@@ -313,12 +165,16 @@ const Administracao = () => {
         <div className="flex flex-col items-center justify-center p-4 md:p-8">
           <div className="bg-white w-full max-w-[2300px] h-auto rounded-xl p-4 md:p-10 shadow-lg flex flex-col gap-4 md:gap-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                <img src="../Complaint.png" alt="" className="w-8 h-8" /><span className="text-lg">Cadastro de Morador</span>
-              </button>
-              <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
-                <img src="../Account Male.png" alt="" className="w-8 h-8" /><span className="text-lg">Sistemas de Reserva</span>
-              </button>
+              <a href="/cadastros-pendentes">
+                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../Complaint.png" alt="" className="w-8 h-8" /><span className="text-lg">Cadastro de Morador</span>
+                </button>
+              </a>
+              <a href="/reservas">
+                <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
+                  <img src="../Account Male.png" alt="" className="w-8 h-8" /><span className="text-lg">Sistemas de Reserva</span>
+                </button>
+              </a>
               <a href="/manutencao">
                 <button className="flex items-center justify-center gap-3 bg-white rounded-[10px] w-full h-[60px] md:h-[80px] shadow-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">
                   <img src="../Wrench.png" alt="" className="w-8 h-8" /><span className="text-lg">Manutenção/Sugestão</span>
@@ -390,133 +246,8 @@ const Administracao = () => {
           </div>
         </div>
 
-        <div className="flex justify-center items-center p-4 md:p-8">
-          <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
-                Gestão de Áreas Comuns 
-                <span className="text-sm font-normal text-gray-500 ml-2">
-                    (Visualizando: {value.toLocaleDateString('pt-BR')})
-                </span>
-            </h1>
-            
-            <div className="flex flex-col md:flex-row gap-6 md:gap-10 mt-6">
-              <div className="bg-gray-50 rounded-xl shadow-md p-4 w-full md:w-[400px] flex justify-center">
-                <Calendar onChange={setValue} value={value} className="border-none rounded-xl shadow-sm w-full" />
-              </div>
-
-              <div className="flex-1 w-full flex flex-col gap-4">
-                {isLoadingAreas && <p className="text-center py-4 text-blue-600">Buscando disponibilidade para esta data...</p>}
-                
-                {!isLoadingAreas && areas.map((area) => {
-                  const isManutencao = area.statusHoje === 'Manutenção';
-                  const isOcupado = area.statusHoje === 'Ocupado (Fixo)' || area.statusHoje === 'Ocupado';
-                  
-                  let borderColor = '#22c55e'; 
-                  let statusColor = 'text-green-600';
-                  let iconBg = 'bg-green-500';
-
-                  if (isManutencao) {
-                      borderColor = '#f97316'; 
-                      statusColor = 'text-orange-600';
-                      iconBg = 'bg-orange-500';
-                  } else if (isOcupado) {
-                      borderColor = '#ef4444'; 
-                      statusColor = 'text-red-600';
-                      iconBg = 'bg-red-500';
-                  } else if (area.statusHoje === 'Inativo') {
-                      borderColor = '#9ca3af';
-                      statusColor = 'text-gray-500';
-                      iconBg = 'bg-gray-400';
-                  }
-
-                  return (
-                    <div key={area.id} className="flex flex-col sm:flex-row items-center justify-between bg-gray-50 rounded-xl p-4 shadow-md border-l-4 transition-all hover:shadow-lg"
-                         style={{ borderLeftColor: borderColor }}>
-                      <div className="flex items-center gap-4 mb-4 sm:mb-0">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-xl ${iconBg}`}>
-                          {isManutencao ? '🛠️' : '🏠'}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-800 text-lg">{area.nome}</h3>
-                          <p className="text-sm text-gray-600">Capacidade: {area.capacidade} pessoas</p>
-                          <p className={`text-sm font-bold ${statusColor}`}>
-                            {area.statusHoje}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-6">
-                          <div className="text-right">
-                            <p className="text-xs text-gray-500">Taxa de uso</p>
-                            <span className="text-gray-800 font-bold text-lg">R$ {area.preco}</span>
-                          </div>
-                          
-                          <button 
-                             onClick={() => abrirModalArea(area)}
-                             className="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition text-sm font-medium shadow-sm"
-                          >
-                             Editar / Manutenção
-                          </button>
-                      </div>
-                    </div>
-                  );
-                })}
-                
-                {areas.length === 0 && !isLoadingAreas && (
-                    <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                        Nenhuma área comum cadastrada no sistema.
-                    </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-center items-center p-4 md:p-8">
-          <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Cadastros Pendentes de Aprovação</h1>
-            
-            {!isLoading && pendentes.length === 0 && (
-              <div className="p-4 bg-green-50 text-green-800 rounded-lg border border-green-200">
-                Nenhum cadastro pendente no momento.
-              </div>
-            )}
-
-            <div className='space-y-4 mt-4'>
-              {pendentes.map((cadastro) => (
-                <div key={cadastro.id} className='bg-yellow-50 p-4 rounded-xl border border-yellow-200 flex flex-col md:flex-row md:items-center justify-between shadow-sm gap-4'>
-                  <div>
-                    <div className='flex items-center space-x-2'>
-                      <h1 className='text-lg font-semibold text-gray-800'>{cadastro.nome}</h1>
-                      <div className='px-2 h-5 bg-amber-300 rounded-[5px] flex items-center justify-center'>
-                        <span className='text-yellow-800 text-xs font-bold'>Pendente</span>
-                      </div>
-                    </div>
-                    <h1 className='text-sm font-medium text-gray-700 mt-1'>
-                      CPF: {cadastro.cpf} • Casa Nº <strong>{getCasa(cadastro)}</strong>
-                    </h1>
-                    <h1 className='opacity-70 text-black text-xs font-medium mt-0.5'>
-                      Solicitado em {formatDate(cadastro.createdAt)}
-                    </h1>
-                  </div>
-                  <div className='flex items-center gap-3'>
-                    <button 
-                      onClick={() => setDetalhesClienteId(cadastro.id)}
-                      className='flex items-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg font-medium text-sm hover:bg-blue-50 transition shadow-sm'
-                    >
-                      <img src="../View.png" alt="" className='w-4 h-4 mr-2' />Visualizar
-                    </button>
-                    <button onClick={() => handleAprovar(cadastro.id)} className='flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 transition shadow-md'>
-                      <img src="../DoneBranco.png" alt="" className='w-4 h-4 mr-2' />Aprovar
-                    </button>
-                    <button onClick={() => handleRejeitar(cadastro.id)} className='flex items-center px-4 py-2 bg-red-600 text-white rounded-lg font-medium text-sm hover:bg-red-700 transition shadow-md'>
-                      <img src="../MultiplyBranco.png" alt="" className='w-4 h-4 mr-2' />Rejeitar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        
+        {/* Cadastros pendentes moved to dedicated page: /cadastros-pendentes */}
 
         <div className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-4 md:p-10">
