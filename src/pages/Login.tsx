@@ -109,7 +109,7 @@ const Login = () => {
               </div>
             </div>
           </div>
-          <div className="w-[440px] bg-white rounded-[10px] shadow-xl flex-shrink-0">
+          <div className="w-[440px] h-[496px] bg-white rounded-[10px] shadow-xl flex-shrink-0 overflow-auto">
             <div className="bg-gradient-to-r from-[#5e5ced] to-[#572486] w-full h-[170px] rounded-t-[10px] flex items-center justify-center flex-col p-4">
               <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-900 rounded-full flex items-center justify-center shadow-md">
                 <img src="../LOGIN.png" alt="" className="w-10 h-10" />
@@ -157,14 +157,28 @@ const Login = () => {
                     placeholder="********" 
                     required
                   />
-                  <button type="button" onClick={togglePasswordVisibility} className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                     <span className="text-xs text-gray-500">{showPassword ? 'Ocultar' : 'Ver'}</span>
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.94 10.94 0 0112 19c-5.52 0-9.31-2.94-10.59-7a10.94 10.94 0 012.02-3.5" />
+                        <path d="M1 1l22 22" />
+                        <path d="M9.88 9.88A3 3 0 0014.12 14.12" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
                   </button>
                 </div>
               </div>
-              <div className="flex items-center justify-end mb-6">
-                <a href="#" className='text-sm font-medium text-[#2B67EC] hover:underline'>Esqueci minha senha</a>
-              </div>
+              {/* Link 'Esqueci minha senha' removido conforme solicitado */}
               <div className="flex items-center justify-center">
                 <button 
                   type="submit" 
