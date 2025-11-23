@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '../services/api';
 
@@ -9,11 +9,28 @@ interface ModalProps {
 }
 
 const ModalVot: React.FC<ModalProps> = ({ isOpen, onClose, onSuccess }) => {
+    const getLocalISOString = (addDays = 0) => {
+        const date = new Date();
+        date.setDate(date.getDate() + addDays);
+        const offset = date.getTimezoneOffset(); 
+        const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+        return localDate.toISOString().slice(0, 16); 
+    };
+
     const [titulo, setTitulo] = useState('');
     const [descricao, setDescricao] = useState('');
-    const [dataInicio, setDataInicio] = useState(new Date().toISOString().slice(0, 16)); 
-    const [dataFim, setDataFim] = useState(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16));
+    
+    const [dataInicio, setDataInicio] = useState('');
+    const [dataFim, setDataFim] = useState('');
+
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setDataInicio(getLocalISOString(0)); 
+            setDataFim(getLocalISOString(7));    
+        }
+    }, [isOpen]);
 
     if (!isOpen) {
         return null;
@@ -56,7 +73,7 @@ const ModalVot: React.FC<ModalProps> = ({ isOpen, onClose, onSuccess }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
             <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full m-4 max-h-full flex flex-col transform transition-all" onClick={(e) => e.stopPropagation()} role="document">    
                 
                 <div className="flex items-center justify-between p-8 border-b border-gray-100 flex-shrink-0">

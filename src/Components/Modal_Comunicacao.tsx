@@ -1,5 +1,6 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Send } from 'lucide-react';
+import api from '../services/api';
 
 interface ModalProps {
     isOpen: boolean;
@@ -7,109 +8,137 @@ interface ModalProps {
 }
 
 const ModalComu: React.FC<ModalProps> = ({ isOpen, onClose }) => {
-    if (!isOpen) {
-        return null;
-    }
+    const [titulo, setTitulo] = useState('');
+    const [descricao, setDescricao] = useState('');
+    const [tipo, setTipo] = useState('NORMAL'); 
+    const [destinatario, setDestinatario] = useState('Todos os moradores');
+    const [loading, setLoading] = useState(false);
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!titulo.trim() || !descricao.trim()) {
+            alert("Preencha o título e a mensagem.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await api.post('/avisos', {
+                titulo,
+                descricao,
+                tipo
+            });
+
+            alert('Comunicado enviado com sucesso!');
+            setTitulo('');
+            setDescricao('');
+            setTipo('NORMAL');
+            onClose();
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao enviar comunicado. Tente novamente.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full m-4 max-h-full flex flex-col transform transition-all" onClick={(e) => e.stopPropagation()} role="document">
-                <div className="flex items-center justify-between p-8 border-b border-gray-100 flex-shrink-0">
-                    <div className="flex items-center space-x-3">
-                        <img src="./MegaphoneAzul.png" alt="Ícone Central de Comunicação" className="w-10 h-10 text-green-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full m-4 max-h-[90vh] flex flex-col animate-fade-in overflow-hidden">
+                
+                <div className="bg-gradient-to-r from-[#5e5ced] to-[#572486] p-6 flex justify-between items-center text-white">
+                    <div className="flex items-center gap-3">
+                        <img src="./Megaphone.png" alt="Ícone" className="w-8 h-8 brightness-0 invert" />
                         <div>
-                            <h2 id="modal-title" className="text-xl font-semibold text-gray-800">Central de Comunicação</h2>
-                            <h1 className='text-gray-600 font-bold'>Envie comunicados e mantenha os moradores informados</h1>
+                            <h2 className="text-2xl font-bold">Novo Comunicado</h2>
+                            <p className="text-white/80 text-sm">Envie avisos importantes para os moradores</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition" aria-label="Fechar">
-                        <X className="w-5 h-5" />
+                    <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition">
+                        <X className="w-6 h-6" />
                     </button>
                 </div>
 
-                <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-                    <h3 className="text-lg font-semibold text-gray-700">Enviar aviso</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="destinatarios" className="block text-sm font-medium text-gray-700">Destinatários</label>
-                            <div className="relative mt-1">
-                                <select id="destinatarios" name="destinatarios" defaultValue="Todos os moradores" className="block w-full appearance-none border border-gray-300 bg-white rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
+                    <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label htmlFor="destinatarios" className="block text-sm font-bold text-gray-700 mb-1">Destinatários</label>
+                                <select 
+                                    id="destinatarios" 
+                                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5e5ced] focus:border-[#5e5ced] outline-none bg-white"
+                                    value={destinatario}
+                                    onChange={e => setDestinatario(e.target.value)}
+                                >
                                     <option>Todos os moradores</option>
-                                    <option>Grupo A</option>
-                                    <option>Apartamento X</option>
+                                    <option>Bloco A</option>
+                                    <option>Bloco B</option>
                                 </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                                </div>
+                            </div>
+
+                            <div>
+                                <label htmlFor="tipo" className="block text-sm font-bold text-gray-700 mb-1">Prioridade</label>
+                                <select 
+                                    id="tipo" 
+                                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5e5ced] focus:border-[#5e5ced] outline-none bg-white"
+                                    value={tipo}
+                                    onChange={e => setTipo(e.target.value)}
+                                >
+                                    <option value="NORMAL">Normal (Informativo)</option>
+                                    <option value="URGENTE">Urgente (Alerta)</option>
+                                </select>
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="tipo" className="block text-sm font-medium text-gray-700">Tipo de comunicado</label>
-                            <div className="relative mt-1">
-                                <select id="tipo" name="tipo" defaultValue="Evento" className="block w-full appearance-none border border-gray-300 bg-white rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option>Evento</option>
-                                    <option>Manutenção</option>
-                                    <option>Aviso Geral</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                                </div>
+                            <label htmlFor="titulo" className="block text-sm font-bold text-gray-700 mb-1">Assunto</label>
+                            <input 
+                                type="text" 
+                                id="titulo" 
+                                placeholder="Ex: Manutenção da Piscina" 
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5e5ced] focus:border-[#5e5ced] outline-none"
+                                value={titulo}
+                                onChange={e => setTitulo(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <div className="flex items-center gap-2 mb-2 text-blue-600">
+                                <img src="./Info Squared.png" alt="Info" className="w-5 h-5" />
+                                <h3 className="font-bold text-sm uppercase tracking-wide">Mensagem</h3>
                             </div>
+                            <textarea 
+                                id="mensagem" 
+                                rows={6} 
+                                placeholder="Digite o conteúdo do comunicado aqui..." 
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5e5ced] focus:border-[#5e5ced] outline-none resize-none"
+                                value={descricao}
+                                onChange={e => setDescricao(e.target.value)}
+                                required
+                            />
                         </div>
-                    </div>
 
-                    <div>
-                        <label htmlFor="assunto" className="block text-sm font-medium text-gray-700">Assunto:</label>
-                        <div className="mt-1">
-                            <input type="text" id="assunto" name="assunto" placeholder="Digite o assunto do comunicado" className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"/>
+                        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-2">
+                            <button type="button" onClick={onClose} className="px-6 py-3 text-gray-700 font-medium bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
+                                Cancelar
+                            </button>
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="px-8 py-3 text-white font-bold bg-[#5e5ced] hover:bg-[#4a48c9] rounded-lg shadow-md transition transform hover:scale-[1.02] active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Enviando...' : (
+                                    <>
+                                        <Send className="w-4 h-4" /> Publicar
+                                    </>
+                                )}
+                            </button>
                         </div>
-                    </div>
-
-                    <div>
-                        <div className="flex items-center space-x-2 text-blue-600 font-2x1 font-bold pb-2">
-                            <img src="./Info Squared.png" alt="Ícone Informações" className="w-8 h-8" />
-                                <h3>Informações Básicas</h3>
-                            <div className="w-4 h-4 flex items-center justify-center text-blue-500">
-                            </div>
-                        </div>
-                        <div className="mt-1">
-                            <textarea id="mensagem" name="mensagem" rows={5} placeholder="Digite sua mensagem aqui..." className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none">
-                            </textarea>
-                        </div>
-                    </div>
-
-                    <div className="flex space-x-8 pt-4">
-                        <div className="flex items-center">
-                            <input id="email-1" name="email-1" type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                            <label htmlFor="email-1" className="ml-2 block text-sm text-gray-900">
-                                Enviar por email
-                            </label>
-                        </div>
-                        <div className="flex items-center">
-                            <input id="email-2" name="email-2" type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                            <label htmlFor="email-2" className="ml-2 block text-sm text-gray-900">
-                                Enviar por email
-                            </label>
-                        </div>
-                        <div className="flex items-center">
-                            <input id="email-3" name="email-3" type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                            <label htmlFor="email-3" className="ml-2 block text-sm text-gray-900">
-                                Enviar por email
-                            </label>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div className="flex justify-end space-x-3 p-4 border-t border-gray-100 flex-shrink-0">
-                    <button type="button" onClick={onClose} className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-150">
-                        Cancelar
-                    </button>
-                    <button type="submit" className="flex items-center space-x-2 px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-150 shadow-md shadow-blue-500/50">
-                        <img src="./Send.png" alt="Ícone Publicar" className="h-5 w-5 transform" />
-                        <span>Publicar Comunicado</span>
-                    </button>
+                    </form>
                 </div>
             </div>
         </div>

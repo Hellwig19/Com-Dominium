@@ -5,6 +5,7 @@ import DataAtual from '../Components/Data';
 import ModalCad from '../Components/Modal_CadastrarVis';
 import ModalUltimosAcessos from '../Components/Modal_UltimosAcessos';
 import api from '../services/api';
+import ChatWidget from '../Components/ChatWidget';
 
 interface Visitante {
   id: number | string;
@@ -234,11 +235,14 @@ export default function HomePortaria() {
   };
 
   const listaExibicao = listaVisitantes
-    .filter(v => v.status !== 'SAIU') 
+    .filter(v => v.status !== 'SAIU')
     .sort((a, b) => {
-      if (a.status === 'AGENDADO' && b.status !== 'AGENDADO') return -1; 
-      if (a.status !== 'AGENDADO' && b.status === 'AGENDADO') return 1; 
-      return 0; 
+      if (a.status === 'AGENDADO' && b.status !== 'AGENDADO') return -1;
+      if (a.status !== 'AGENDADO' && b.status === 'AGENDADO') return 1;
+      
+      const horaA = a.horario || '';
+      const horaB = b.horario || '';
+      return horaA.localeCompare(horaB);
     });
 
   return (
@@ -497,6 +501,8 @@ export default function HomePortaria() {
               </div>
             </div>
 
+          
+
             <div className="flex flex-col space-y-4 max-h-[550px] overflow-y-auto p-6 bg-gray-50">
               {listaExibicao.length === 0 && (
                  <div className="flex flex-col items-center justify-center py-10 text-gray-500">
@@ -579,7 +585,7 @@ export default function HomePortaria() {
                                     ) : (
                                         <p className="text-gray-700 flex items-center gap-1">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
-                                            Entrou: <span className="font-semibold">{new Date(visita.dataEntrada!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                            Entrou: <span className="font-semibold">{visita.dataEntrada ? new Date(visita.dataEntrada).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}</span>
                                         </p>
                                     )}
                                 </div>
@@ -726,6 +732,7 @@ export default function HomePortaria() {
       <footer>
         <Footer />
       </footer>
+      <ChatWidget />
     </>
   );
 }
