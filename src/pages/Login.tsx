@@ -73,7 +73,7 @@ const Login = () => {
           </h2>
         </div>
         <div className="flex items-center space-x-2 text-white flex-shrink-0">
-          <a href="https://wa.me/53981469693" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 hover:opacity-60 transition">
+          <a href="https://wa.me/53991384332" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 hover:opacity-60 transition">
             <img src="../Headset.png" alt="Suporte" className="h-[30px] w-[30px]" />
             <span className="text-base font-medium">Suporte</span>
           </a>
