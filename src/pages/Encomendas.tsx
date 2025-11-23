@@ -189,7 +189,6 @@ export default function Encomendas() {
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Destinatário</th>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Remetente</th>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Chegada</th>
-                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Cód.</th>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Status</th>
                         <th className='px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>Ações</th>
                       </tr>
@@ -213,9 +212,6 @@ export default function Encomendas() {
                           <td className='px-4 py-4 whitespace-nowrap text-sm text-gray-500'>
                             {new Date(encomenda.dataChegada).toLocaleDateString()} <br/>
                             <span className="text-xs">{new Date(encomenda.dataChegada).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                          </td>
-                          <td className='px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-600'>
-                            {encomenda.codigo}
                           </td>
                           <td className='px-4 py-4 whitespace-nowrap'>
                             {encomenda.status === 'AGUARDANDO_RETIRADA' ? (
