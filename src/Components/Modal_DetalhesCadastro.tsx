@@ -49,9 +49,9 @@ export default function ModalDetalhesCadastro({ isOpen, onClose, clienteId, onAp
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">     
         <div className="bg-white rounded-xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">Análise de Cadastro</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        <div className="bg-gradient-to-r from-[#5e5ced] to-[#572486] flex justify-between items-center p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-white">Análise de Cadastro</h2>
+          <button onClick={onClose} className="text-white hover:text-gray-700 text-2xl">&times;</button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
           {loading ? (

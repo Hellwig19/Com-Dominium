@@ -76,12 +76,12 @@ const ModalVot: React.FC<ModalProps> = ({ isOpen, onClose, onSuccess }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
             <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full m-4 max-h-full flex flex-col transform transition-all" onClick={(e) => e.stopPropagation()} role="document">    
                 
-                <div className="flex items-center justify-between p-8 border-b border-gray-100 flex-shrink-0">
+                <div className="bg-gradient-to-r from-[#5e5ced] to-[#572486] p-6 flex justify-between items-center text-white">
                     <div className="flex items-center space-x-3">
-                        <img src="./PollAzul.png" alt="Ícone Nova Votação" className="w-10 h-10 text-blue-600" />
+                        <img src="./poll50.png" alt="Ícone Nova Votação" className="w-10 h-10 text-white" />
                         <div>
-                            <h2 id="modal-title" className="text-xl font-semibold text-gray-800">Nova Votação</h2>
-                            <h1 className='text-gray-600 font-bold'>Criar votação (A favor / Contra)</h1>
+                            <h2 id="modal-title" className="text-xl font-semibold">Nova Votação</h2>
+                            <h1 className='text-white/80 text-sm'>Criar votação (A favor / Contra)</h1>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition" aria-label="Fechar">

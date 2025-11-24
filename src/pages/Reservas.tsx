@@ -9,6 +9,8 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Footer from '../Components/footer';
 import Header from '../Components/Header';
 import api from '../services/api';
+import ModalVot from '../Components/Modal_Votacao';
+import ModalComu from '../Components/Modal_Comunicacao';
 
 interface AreaComumBackend {
   id: number;
@@ -27,7 +29,8 @@ const Reservas = () => {
   const locales = { 'pt-BR': ptBR };
   const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
   const events: any[] = [];
-
+  const [isComunicacaoModalOpen, setIsComunicacaoModalOpen] = useState(false);
+  const [isVotacaoModalOpen, setIsVotacaoModalOpen] = useState(false);
   const [areaParaEditar, setAreaParaEditar] = useState<AreaComumBackend | null>(null);
   const [formArea, setFormArea] = useState({ nome: '', preco: '', capacidade: '', status: 'ATIVO' });
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
@@ -36,7 +39,6 @@ const Reservas = () => {
   const maxAllowed = new Date(today);
   maxAllowed.setMonth(maxAllowed.getMonth() + 6);
 
-  // helper month boundaries for calendar navigation
   const minMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const maxMonthStart = new Date(maxAllowed.getFullYear(), maxAllowed.getMonth(), 1);
 
@@ -58,7 +60,6 @@ const Reservas = () => {
       const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0');
       const dia = String(dataSelecionada.getDate()).padStart(2, '0');
       const dataString = `${ano}-${mes}-${dia}`;
-
       const response = await api.get(`/areas/status-dia?data=${dataString}`);
       setAreas(response.data);
     } catch (error) {
@@ -72,14 +73,12 @@ const Reservas = () => {
     if (value) fetchAreasPorData(value);
   }, [value]);
 
-  // try to load blocked dates from backend; if endpoint missing, ignore errors
   useEffect(() => {
     const load = async () => {
       try {
         const res = await api.get('/areas/blocked-dates');
         if (Array.isArray(res.data)) setBlockedDates(res.data);
       } catch (err) {
-        // ignore - we'll allow local toggles
       }
     };
     load();
@@ -87,7 +86,6 @@ const Reservas = () => {
 
   const abrirModalArea = (area: AreaComumBackend) => {
     if (areaParaEditar?.id === area.id) {
-      // same area clicked -> toggle close
       setAreaParaEditar(null);
       return;
     }
@@ -135,11 +133,9 @@ const Reservas = () => {
     }
 
     try {
-      // try backend; if endpoints don't exist, fall back to local update
       if (already) {
         await api.patch('/areas/unblock-date', { date: iso });
         setBlockedDates((s) => s.filter(d => d !== iso));
-        // no modal, small alert
       } else {
         await api.patch('/areas/block-date', { date: iso });
         setBlockedDates((s) => [...s, iso]);
@@ -160,25 +156,33 @@ const Reservas = () => {
         <Header />
       </header>
 
-      {/* Big Calendar styles (uses its own CSS import) */}
-
-      {/* modal moved inside the main panel so it doesn't cover whole app */}
+      <ModalVot isOpen={isVotacaoModalOpen} onClose={() => setIsVotacaoModalOpen(false)} />
+      <ModalComu isOpen={isComunicacaoModalOpen} onClose={() => setIsComunicacaoModalOpen(false)} />
 
       <main className="bg-[#EAEAEA] min-h-screen">
-          <div className="flex justify-center items-center p-6 md:p-10">
+      <div className='flex justify-center items-center py-4 space-x-6'>
+          <a href="/admin">
+            <button className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
+              <img className="mr-2 h-5 w-5" src="./Home.png" alt="" /> Inicio
+            </button>
+          </a>
+          <button onClick={() => setIsComunicacaoModalOpen(true)} className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
+            <img className="mr-2 h-5 w-5" src="./Megaphone.png" alt="" /> Comunicação
+          </button>
+          <button onClick={() => setIsVotacaoModalOpen(true)} className='px-8 py-3 bg-white text-gray-700 rounded-xl shadow-md border border-gray-300 hover:bg-gray-100 hover:text-blue-600 transition duration-200 font-medium text-sm flex items-center'>
+            <img className="mr-2 h-5 w-5" src="./PollAzul.png" alt="" /> Votação
+          </button>
+        </div>
+          <div className="flex justify-center items-center p-6 md:p-2">
           <div className="w-full max-w-[1800px] bg-white rounded-2xl shadow-2xl p-6 md:p-12 min-h-[760px]">
             <div className="flex items-center justify-center mb-4">
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 text-center">Gestão de Áreas Comuns</h1>
             </div>
 
-            {/* Controls: removed manual day navigation buttons so days are selectable directly on the calendar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-              {/* legend removed per UX request */}
-              {/* selected date displayed at the top (more visible) */}
             </div>
 
               <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start">
-              {/* Areas list (left column on large screens) - fixed width so calendar won't shrink */}
               <div className="w-full order-2 lg:order-1 pr-6" style={{ maxWidth: 480 }}>
                 <div className="flex flex-col gap-4">
                   <div className="mb-2">
@@ -278,11 +282,9 @@ const Reservas = () => {
                 </div>
               </div>
 
-              {/* Calendar: larger right column on large screens */}
               <div className="w-full lg:flex-1 flex-shrink-0 order-1 lg:order-2">
                 <div className="bg-gray-50 rounded-xl shadow-md p-0 lg:p-2 flex justify-center items-start h-full w-full">
                     <div className="w-full px-0 lg:px-2">
-                      {/* Custom toolbar prevents navigating to months before current or after +6 months */}
                       <BigCalendar
                         localizer={localizer}
                         events={events}
@@ -290,11 +292,10 @@ const Reservas = () => {
                         endAccessor="end"
                         defaultView="month"
                         views={["month"]}
-                        // clamp navigation between minMonthStart and maxMonthStart
                         onNavigate={(date: Date) => {
                           const targetMonthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-                          if (targetMonthStart < minMonthStart) return; // ignore
-                          if (targetMonthStart > maxMonthStart) return; // ignore
+                          if (targetMonthStart < minMonthStart) return; 
+                          if (targetMonthStart > maxMonthStart) return; 
                           setValue(new Date(date));
                         }}
                         date={value}
@@ -323,11 +324,9 @@ const Reservas = () => {
                           const clickedDay = new Date(clicked.getFullYear(), clicked.getMonth(), clicked.getDate());
                           const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                           const maxStart = new Date(maxAllowed.getFullYear(), maxAllowed.getMonth(), maxAllowed.getDate());
-                          // if clicked a past day, ignore silently (not selectable)
                           if (clickedDay < todayStart) {
                             return;
                           }
-                          // if beyond allowed max, show alert and ignore
                           if (clickedDay > maxStart) {
                             alert('Selecione uma data entre hoje e +6 meses.');
                             return;
@@ -337,20 +336,16 @@ const Reservas = () => {
                         }}
                         dayPropGetter={(date: Date) => {
                           const iso = toISO(date);
-                          // blocked dates should be prominent
                           if (blockedDates.includes(iso)) {
                             return { style: { background: '#ef4444', color: 'white', borderRadius: '6px' } };
                           }
-                          // selected date
                           if (isSameDay(date, value)) {
                             return { style: { background: '#dbeafe', borderRadius: '8px', boxShadow: 'inset 0 0 0 2px #60a5fa' } };
                           }
-                          // out of allowed range -> muted
                           const dayOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
                           const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                           const maxStart = new Date(maxAllowed.getFullYear(), maxAllowed.getMonth(), maxAllowed.getDate());
                             if (dayOnly < todayStart || dayOnly > maxStart) {
-                              // past days: muted + not selectable
                               return { style: { color: '#9ca3af', opacity: 0.45, pointerEvents: 'none' } };
                             }
                           return {};
@@ -360,8 +355,6 @@ const Reservas = () => {
                       />
                     </div>
                 </div>
-                {/* footer controls for selected date (block/unblock) */}
-                {/* selected date moved to controls area above the areas list */}
               </div>
             </div>
           </div>
