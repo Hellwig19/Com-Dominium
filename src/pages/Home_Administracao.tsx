@@ -39,7 +39,7 @@ const Administracao = () => {
   const [votacoes, setVotacoes] = useState<Votacao[]>([]);
   const [moradores, setMoradores] = useState<Cliente[]>([]);
   const [pendentes, setPendentes] = useState<Cliente[]>([]);
-  const [isLoadingPendentes, setIsLoadingPendentes] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true); 
   const [busca, setBusca] = useState('');
 
   const getSaudacao = () => {
@@ -49,63 +49,53 @@ const Administracao = () => {
     return 'Boa noite';
   };
 
-  const fetchInitialData = async () => {
+  // Função unificada para buscar tudo
+  // showLoading = false por padrão para não piscar a tela no polling
+  const refreshData = useCallback(async (showLoading = false) => {
+    if (showLoading) setIsInitialLoading(true);
+
     try {
-      const [resVotacoes, resMoradores] = await Promise.all([
+      // Faz as 3 chamadas em paralelo para ser mais rápido
+      const [resVotacoes, resMoradores, resPendentes] = await Promise.all([
         api.get('/votacoes'),
         api.get('/clientes'),
+        api.get('/clientes?pendentes=true')
       ]);
+
       setVotacoes(resVotacoes.data);
       setMoradores(resMoradores.data);
+      setPendentes(resPendentes.data || []);
+
     } catch (error) {
-      console.error('Erro ao carregar dashboard:', error);
-    }
-  };
-
-  // Modificado para aceitar showLoading: boolean (padrão true)
-  // Isso permite atualizar em background sem mostrar o spinner
-  const fetchPendentes = async (showLoading = true) => {
-    try {
-      if (showLoading) setIsLoadingPendentes(true);
-      
-      const res = await api.get('/clientes?pendentes=true');
-      setPendentes(res.data || []);
-    } catch (err) {
-      console.error('Erro ao carregar cadastros pendentes', err);
+      console.error('Erro ao atualizar dashboard:', error);
     } finally {
-      if (showLoading) setIsLoadingPendentes(false);
+      if (showLoading) setIsInitialLoading(false);
     }
-  };
-
-  // Effect para carregar dados iniciais e configurar o Polling
-  useEffect(() => {
-    const nomeSalvo = sessionStorage.getItem('admin_nome') || localStorage.getItem('admin_nome');
-    if (nomeSalvo) {
-        setAdminName(nomeSalvo.split(' ')[0]);
-    }
-
-    // 1. Carga Inicial (com loading visual se necessário)
-    fetchInitialData();
-    fetchPendentes(true);
-
-    // 2. Configura atualização automática a cada 5 segundos
-    const intervalId = setInterval(() => {
-      fetchInitialData();
-      fetchPendentes(false); // false para atualização silenciosa
-    }, 5000);
-
-    // 3. Limpa o intervalo ao desmontar o componente
-    return () => clearInterval(intervalId);
   }, []);
 
+  // Effect único de inicialização e polling
+  useEffect(() => {
+    const nomeSalvo = sessionStorage.getItem('admin_nome') || localStorage.getItem('admin_nome');
+    if (nomeSalvo) setAdminName(nomeSalvo.split(' ')[0]);
+
+    // 1. Carga inicial (com spinner)
+    refreshData(true);
+
+    // 2. Atualização silenciosa a cada 10 segundos (aumentei de 5 para 10 para reduzir carga)
+    const interval = setInterval(() => {
+      refreshData(false);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [refreshData]);
+
+  // Ações (Atualizam a lista manualmente após sucesso)
   const handleAprovar = async (id: string) => {
     if(!confirm("Tem certeza que deseja aprovar este cadastro?")) return;
     try {
       await api.patch(`/clientes/${id}/aprovar`);
       alert("Cliente aprovado com sucesso!");
-      // Atualiza imediatamente após ação
-      await fetchInitialData();
-      await fetchPendentes(false);
+      refreshData(false); 
     } catch (error) {
       alert("Erro ao aprovar cliente.");
     }
@@ -115,10 +105,8 @@ const Administracao = () => {
     if(!confirm("Tem certeza que deseja REJEITAR e EXCLUIR este cadastro?")) return;
     try {
       await api.delete(`/clientes/${id}/rejeitar`);
-      alert("Cliente rejeitado.");
-      // Atualiza imediatamente após ação
-      await fetchInitialData();
-      await fetchPendentes(false);
+      alert("Cadastro rejeitado.");
+      refreshData(false);
     } catch (error) {
       alert("Erro ao rejeitar cliente.");
     }
@@ -145,7 +133,6 @@ const Administracao = () => {
     const termo = busca.toLowerCase();
     const nome = morador.nome.toLowerCase();
     const casa = getCasa(morador).toLowerCase();
-    
     return nome.includes(termo) || casa.includes(termo);
   });
 
@@ -207,12 +194,10 @@ const Administracao = () => {
           </div>
         </div>
 
-        {/* Cadastros pendentes - embedded here on Home as requested */}
         <div id="cadastrosPendentes" className="flex justify-center items-center p-4 md:p-8">
           <div className="w-full max-w-[2300px] bg-white rounded-2xl shadow-2xl p-6 md:p-10">
             <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold">Cadastros Pendentes de Aprovação</h1>
-                {/* Indicador discreto de atualização automática */}
                 <div className="flex items-center gap-2">
                     <span className="relative flex h-3 w-3">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -222,7 +207,7 @@ const Administracao = () => {
                 </div>
             </div>
 
-            {!isLoadingPendentes && pendentes.length === 0 && (
+            {isInitialLoading && pendentes.length === 0 && (
               <div className="p-4 bg-green-50 text-green-800 rounded-lg border border-green-200">Nenhum cadastro pendente no momento.</div>
             )}
 
